@@ -65,6 +65,15 @@ cp .env.example .env
 docker compose up --build
 ```
 
+### macOS one-shot setup
+
+If you want a direct bootstrap script for macOS:
+
+```bash
+chmod +x scripts/setup-macos.sh
+./scripts/setup-macos.sh
+```
+
 Services:
 - Backend API: http://localhost:8000
 - API docs: http://localhost:8000/docs
