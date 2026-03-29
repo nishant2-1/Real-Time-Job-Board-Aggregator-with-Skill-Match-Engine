@@ -8,30 +8,32 @@ export interface JobItem {
   salary_min?: number | null;
   salary_max?: number | null;
   salary_currency?: string | null;
-  match_score?: number | null;
-  top_matched_skills: string[];
+  match_pct: number;
+  matched_skills: string[];
   missing_skills: string[];
+  top_keywords: string[];
   posted_at: string;
 }
 
-export interface PaginationMeta {
-  total_count: number;
+export interface JobsResponse {
+  jobs: JobItem[];
+  total: number;
   page: number;
   limit: number;
-}
-
-export interface JobsResponse {
-  data: JobItem[];
-  pagination: PaginationMeta;
+  pages: number;
 }
 
 export interface ScraperSourceStatus {
   source: string;
   last_finished_at: string;
-  jobs_inserted: number;
+  jobs_found: number;
+  jobs_new: number;
   jobs_updated: number;
+  jobs_total: number;
 }
 
 export interface ScraperStatusResponse {
+  last_scrape_time: string | null;
+  next_run: string;
   sources: ScraperSourceStatus[];
 }

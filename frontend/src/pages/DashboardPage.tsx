@@ -8,7 +8,7 @@ import api from "../services/api";
 import type { ScraperStatusResponse } from "../types/job";
 
 export default function DashboardPage() {
-  const { data } = useJobs({ page: 1, limit: 20, sort: "match_score", filter: "remote" });
+  const { data } = useJobs({ page: 1, limit: 20, sort: "match_score", remote: true });
   const { data: scraperStatus } = useQuery({
     queryKey: ["scraper-status"],
     queryFn: async () => {
@@ -23,11 +23,11 @@ export default function DashboardPage() {
   const hasInitializedToastsRef = useRef<boolean>(false);
 
   const summary = useMemo(() => {
-    const items = data?.data ?? [];
+    const items = data?.jobs ?? [];
     const total = items.length;
-    const avgMatch = total ? items.reduce((acc, item) => acc + (item.match_score ?? 0), 0) / total : 0;
-    const topSkills = [...new Set(items.flatMap((job) => job.top_matched_skills))].slice(0, 8);
-    const bestScore = items.reduce((acc, item) => Math.max(acc, item.match_score ?? 0), 0);
+    const avgMatch = total ? items.reduce((acc, item) => acc + item.match_pct, 0) / total : 0;
+    const topSkills = [...new Set(items.flatMap((job) => job.matched_skills))].slice(0, 8);
+    const bestScore = items.reduce((acc, item) => Math.max(acc, item.match_pct), 0);
     const today = new Date().toISOString().slice(0, 10);
     const newToday = items.filter((item) => item.posted_at.slice(0, 10) === today).length;
     return { total, avgMatch, topSkills, bestScore, newToday };

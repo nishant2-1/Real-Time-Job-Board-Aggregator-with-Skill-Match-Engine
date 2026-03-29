@@ -10,7 +10,7 @@ function badgeColor(match?: number | null): string {
 }
 
 export default function JobCard({ job }: { job: JobItem }) {
-  const hasScore = job.match_score !== null && job.match_score !== undefined;
+  const hasScore = job.match_pct !== null && job.match_pct !== undefined;
 
   return (
     <article className="card space-y-4">
@@ -29,13 +29,13 @@ export default function JobCard({ job }: { job: JobItem }) {
             <p className="text-sm text-radar-700">{job.company} • {job.location}</p>
           </div>
         </div>
-        <span className={clsx("rounded-full px-3 py-1 text-sm font-semibold", badgeColor(job.match_score))}>
-          {hasScore ? `${job.match_score}%` : "N/A"}
+        <span className={clsx("rounded-full px-3 py-1 text-sm font-semibold", badgeColor(job.match_pct))}>
+          {hasScore ? `${job.match_pct}%` : "N/A"}
         </span>
       </header>
 
       <div className="flex flex-wrap gap-2">
-        {job.top_matched_skills.slice(0, 5).map((skill) => (
+        {job.matched_skills.slice(0, 5).map((skill) => (
           <span key={skill} className="rounded-full bg-radar-100 px-2 py-1 text-xs text-radar-700">
             {skill}
           </span>

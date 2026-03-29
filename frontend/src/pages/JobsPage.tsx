@@ -5,20 +5,21 @@ import { useJobs } from "../hooks/useJobs";
 
 export default function JobsPage() {
   const [page, setPage] = useState(1);
-  const [sort, setSort] = useState<"match_score" | "posted_at" | "company">("match_score");
+  const [sort, setSort] = useState<"match_score" | "date" | "salary">("match_score");
   const [remoteOnly, setRemoteOnly] = useState(true);
-  const [location, setLocation] = useState("");
   const [minSalaryInput, setMinSalaryInput] = useState("");
+  const [minMatchInput, setMinMatchInput] = useState("");
 
   const minSalary = minSalaryInput ? Number(minSalaryInput) : undefined;
+  const minMatch = minMatchInput ? Number(minMatchInput) : undefined;
 
   const { data, isLoading } = useJobs({
     page,
     limit: 20,
     sort,
-    filter: remoteOnly ? "remote" : undefined,
-    location: location || undefined,
+    remote: remoteOnly ? true : undefined,
     min_salary: Number.isFinite(minSalary) ? minSalary : undefined,
+    min_match: Number.isFinite(minMatch) ? minMatch : undefined,
   });
 
   if (isLoading) {
@@ -30,12 +31,12 @@ export default function JobsPage() {
       <div className="card flex flex-wrap items-center gap-3">
         <select
           value={sort}
-          onChange={(event) => setSort(event.target.value as "match_score" | "posted_at" | "company")}
+          onChange={(event) => setSort(event.target.value as "match_score" | "date" | "salary")}
           className="rounded-lg border border-radar-300 bg-white px-3 py-2"
         >
           <option value="match_score">Sort by match %</option>
-          <option value="posted_at">Sort by date</option>
-          <option value="company">Sort by company</option>
+          <option value="date">Sort by date</option>
+          <option value="salary">Sort by salary</option>
         </select>
         <label className="inline-flex items-center gap-2 text-sm">
           <input
@@ -45,15 +46,6 @@ export default function JobsPage() {
           />
           Remote only
         </label>
-        <input
-          value={location}
-          onChange={(event) => {
-            setPage(1);
-            setLocation(event.target.value);
-          }}
-          placeholder="Filter by location"
-          className="rounded-lg border border-radar-300 bg-white px-3 py-2"
-        />
         <input
           type="number"
           min={0}
@@ -65,10 +57,22 @@ export default function JobsPage() {
           placeholder="Min salary"
           className="rounded-lg border border-radar-300 bg-white px-3 py-2"
         />
+        <input
+          type="number"
+          min={0}
+          max={100}
+          value={minMatchInput}
+          onChange={(event) => {
+            setPage(1);
+            setMinMatchInput(event.target.value);
+          }}
+          placeholder="Min match %"
+          className="rounded-lg border border-radar-300 bg-white px-3 py-2"
+        />
       </div>
 
       <div className="grid gap-4">
-        {(data?.data ?? []).map((job) => (
+        {(data?.jobs ?? []).map((job) => (
           <JobCard key={job.id} job={job} />
         ))}
       </div>
@@ -83,12 +87,12 @@ export default function JobsPage() {
           Previous
         </button>
         <span className="text-sm text-radar-700">
-          Page {page} of {Math.max(1, Math.ceil((data?.pagination.total_count ?? 0) / (data?.pagination.limit ?? 20)))}
+          Page {page} of {Math.max(1, data?.pages ?? 1)}
         </span>
         <button
           type="button"
           className="rounded-lg border border-radar-300 px-4 py-2"
-          disabled={page >= Math.max(1, Math.ceil((data?.pagination.total_count ?? 0) / (data?.pagination.limit ?? 20)))}
+          disabled={page >= Math.max(1, data?.pages ?? 1)}
           onClick={() => setPage((value) => value + 1)}
         >
           Next
