@@ -6,10 +6,10 @@ import type { JobsResponse } from "../types/job";
 interface UseJobsParams {
   page: number;
   limit: number;
-  sort: "match_score" | "posted_at" | "company";
-  filter?: string;
-  location?: string;
+  sort: "match_score" | "date" | "salary";
+  remote?: boolean;
   min_salary?: number;
+  min_match?: number;
 }
 
 export function useJobs(params: UseJobsParams) {
