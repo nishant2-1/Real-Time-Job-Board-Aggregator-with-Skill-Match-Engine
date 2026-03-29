@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user
 from app.core.config import settings
 from app.core.database import get_db
+from app.models.job_match import JobMatch
 from app.models.resume import Resume
 from app.models.user import User
 from app.schemas.resume import ResumeDeleteResponse, ResumeMeResponse, ResumeUploadResponse
@@ -120,6 +121,7 @@ def delete_latest_resume(user: User = Depends(get_current_user), db: Session = D
         return ResumeDeleteResponse(deleted=False)
 
     db.delete(resume)
+    db.query(JobMatch).filter(JobMatch.user_id == user.id).delete(synchronize_session=False)
     db.commit()
     SkillMatcher().invalidate_user_cache(str(user.id))
     return ResumeDeleteResponse(deleted=True)
