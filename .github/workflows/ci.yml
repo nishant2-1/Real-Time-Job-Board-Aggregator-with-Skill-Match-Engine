@@ -1,0 +1,104 @@
+name: CI
+
+on:
+	push:
+		branches: [main]
+	pull_request:
+
+jobs:
+	backend:
+		name: Backend Checks
+		runs-on: ubuntu-latest
+		services:
+			postgres:
+				image: postgres:16-alpine
+				env:
+					POSTGRES_DB: jobrador
+					POSTGRES_USER: jobrador
+					POSTGRES_PASSWORD: jobrador
+				ports:
+					- 5432:5432
+				options: >-
+					--health-cmd "pg_isready -U jobrador -d jobrador"
+					--health-interval 10s
+					--health-timeout 5s
+					--health-retries 5
+			redis:
+				image: redis:7-alpine
+				ports:
+					- 6379:6379
+		defaults:
+			run:
+				working-directory: backend
+		env:
+			POSTGRES_HOST: localhost
+			POSTGRES_PORT: 5432
+			POSTGRES_DB: jobrador
+			POSTGRES_USER: jobrador
+			POSTGRES_PASSWORD: jobrador
+			REDIS_HOST: localhost
+			REDIS_PORT: 6379
+			JWT_SECRET_KEY: ci-access
+			JWT_REFRESH_SECRET_KEY: ci-refresh
+		steps:
+			- uses: actions/checkout@v4
+			- uses: actions/setup-python@v5
+				with:
+					python-version: "3.11"
+			- name: Install dependencies
+				run: |
+					python -m pip install --upgrade pip
+					pip install -r requirements.txt
+			- name: Ruff
+				run: ruff check app tests
+			- name: Mypy
+				run: mypy app
+			- name: Pytest with coverage gate
+				run: pytest --cov=app --cov-report=term-missing --cov-fail-under=80
+
+	frontend:
+		name: Frontend Checks
+		runs-on: ubuntu-latest
+		defaults:
+			run:
+				working-directory: frontend
+		steps:
+			- uses: actions/checkout@v4
+			- uses: actions/setup-node@v4
+				with:
+					node-version: "20"
+					cache: "npm"
+					cache-dependency-path: frontend/package.json
+			- name: Install dependencies
+				run: npm install
+			- name: ESLint
+				run: npm run lint
+			- name: TypeScript Check
+				run: npm run typecheck
+			- name: Jest tests
+				run: npm run test
+
+	docker:
+		name: Docker Build and Push
+		if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+		needs: [backend, frontend]
+		runs-on: ubuntu-latest
+		steps:
+			- uses: actions/checkout@v4
+			- uses: docker/setup-buildx-action@v3
+			- uses: docker/login-action@v3
+				with:
+					username: ${{ secrets.DOCKERHUB_USERNAME }}
+					password: ${{ secrets.DOCKERHUB_TOKEN }}
+			- name: Build and push backend image
+				uses: docker/build-push-action@v6
+				with:
+					context: ./backend
+					push: true
+					tags: ${{ secrets.DOCKERHUB_USERNAME }}/jobrador-backend:latest
+			- name: Build and push frontend image
+				uses: docker/build-push-action@v6
+				with:
+					context: ./frontend
+					push: true
+					tags: ${{ secrets.DOCKERHUB_USERNAME }}/jobrador-frontend:latest

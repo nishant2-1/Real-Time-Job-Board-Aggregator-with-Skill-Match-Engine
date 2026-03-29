@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+}
+
+.card {
+  @apply rounded-2xl border border-radar-300/50 bg-white/90 p-5 shadow-sm;
+}
