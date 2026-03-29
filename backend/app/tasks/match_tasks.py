@@ -33,6 +33,7 @@ def recompute_matches_for_user(user_id: str) -> dict[str, int | str]:
         matcher = SkillMatcher()
         results = matcher.batch_match(latest_resume, jobs)
 
+        now = datetime.now(tz=UTC)
         for job in jobs:
             result = results.get(str(job.id))
             if result is None:
@@ -44,7 +45,7 @@ def recompute_matches_for_user(user_id: str) -> dict[str, int | str]:
                 matched_skills=result.matched_skills,
                 missing_skills=result.missing_skills,
                 top_keywords=result.top_keywords,
-                computed_at=datetime.now(tz=UTC),
+                computed_at=now,
             )
             stmt = stmt.on_conflict_do_update(
                 index_elements=[JobMatch.user_id, JobMatch.job_id],
@@ -53,8 +54,8 @@ def recompute_matches_for_user(user_id: str) -> dict[str, int | str]:
                     "matched_skills": result.matched_skills,
                     "missing_skills": result.missing_skills,
                     "top_keywords": result.top_keywords,
-                    "computed_at": datetime.now(tz=UTC),
-                    "updated_at": datetime.now(tz=UTC),
+                    "computed_at": now,
+                    "updated_at": now,
                 },
             )
             db.execute(stmt)

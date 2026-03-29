@@ -1,16 +1,15 @@
 from sqlalchemy import func
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+from sqlalchemy import and_
 
 from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.models.job import Job
-from app.models.resume import Resume
+from app.models.job_match import JobMatch
 from app.models.saved_job import SavedJob
 from app.models.user import User
 from app.schemas.jobs import JobDetailResponse, JobListItem, JobListResponse, JobSaveToggleResponse
-from app.schemas.common import PaginatedMeta
-from app.services.matcher_service import MatcherService
 
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
@@ -21,47 +20,41 @@ def list_jobs(
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=20, ge=1, le=100),
     sort: str = Query(default="match_score"),
-    filter: str | None = Query(default=None),
-    location: str | None = Query(default=None),
+    remote: bool | None = Query(default=None),
     min_salary: float | None = Query(default=None, ge=0),
+    min_match: int | None = Query(default=None, ge=0, le=100),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> JobListResponse:
-    query = db.query(Job)
+    query = (
+        db.query(Job, JobMatch)
+        .outerjoin(
+            JobMatch,
+            and_(JobMatch.job_id == Job.id, JobMatch.user_id == user.id),
+        )
+    )
 
-    if filter == "remote":
+    if remote:
         query = query.filter(Job.is_remote.is_(True))
-    if location:
-        query = query.filter(Job.location.ilike(f"%{location}%"))
     if min_salary is not None:
         query = query.filter(Job.salary_max.is_not(None), Job.salary_max >= min_salary)
+    if min_match is not None:
+        query = query.filter(func.coalesce(JobMatch.match_pct, 0) >= min_match)
 
-    if sort == "posted_at":
+    if sort == "date":
         query = query.order_by(Job.posted_at.desc())
-    elif sort == "company":
-        query = query.order_by(Job.company.asc())
+    elif sort == "salary":
+        query = query.order_by(func.coalesce(Job.salary_max, Job.salary_min, 0).desc(), Job.posted_at.desc())
     else:
-        query = query.order_by(Job.match_score.desc().nullslast(), Job.posted_at.desc())
+        query = query.order_by(func.coalesce(JobMatch.match_pct, 0).desc(), Job.posted_at.desc())
 
     total_count = query.with_entities(func.count(Job.id)).scalar() or 0
-    jobs = query.offset((page - 1) * limit).limit(limit).all()
+    rows = query.offset((page - 1) * limit).limit(limit).all()
+    pages = max(1, (total_count + limit - 1) // limit)
 
-    latest_resume = (
-        db.query(Resume)
-        .filter(Resume.user_id == user.id)
-        .order_by(Resume.uploaded_at.desc())
-        .first()
-    )
-    matcher = MatcherService()
-
-    data: list[JobListItem] = []
-    for job in jobs:
-        if latest_resume:
-            match = matcher.compute(latest_resume, job)
-            job.match_score = match.score
-            job.top_matched_skills = match.top_matched_skills
-            job.missing_skills = match.missing_skills
-        data.append(
+    jobs_payload: list[JobListItem] = []
+    for job, job_match in rows:
+        jobs_payload.append(
             JobListItem(
                 id=job.id,
                 title=job.title,
@@ -72,18 +65,20 @@ def list_jobs(
                 salary_min=job.salary_min,
                 salary_max=job.salary_max,
                 salary_currency=job.salary_currency,
-                match_score=job.match_score,
-                top_matched_skills=job.top_matched_skills,
-                missing_skills=job.missing_skills,
+                match_pct=int(job_match.match_pct) if job_match else 0,
+                matched_skills=job_match.matched_skills if job_match else [],
+                missing_skills=job_match.missing_skills if job_match else [],
+                top_keywords=job_match.top_keywords if job_match else [],
                 posted_at=job.posted_at,
             )
         )
 
-    db.commit()
-
     return JobListResponse(
-        data=data,
-        pagination=PaginatedMeta(total_count=total_count, page=page, limit=limit),
+        jobs=jobs_payload,
+        total=total_count,
+        page=page,
+        limit=limit,
+        pages=pages,
     )
 
 
@@ -93,18 +88,11 @@ def get_job(job_id: str, user: User = Depends(get_current_user), db: Session = D
     if not job:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
 
-    latest_resume = (
-        db.query(Resume)
-        .filter(Resume.user_id == user.id)
-        .order_by(Resume.uploaded_at.desc())
-        .first()
+    job_match = (
+        db.query(JobMatch)
+        .filter(JobMatch.user_id == user.id, JobMatch.job_id == job.id)
+        .one_or_none()
     )
-    if latest_resume:
-        match = MatcherService().compute(latest_resume, job)
-        job.match_score = match.score
-        job.top_matched_skills = match.top_matched_skills
-        job.missing_skills = match.missing_skills
-        db.commit()
 
     return JobDetailResponse(
         id=job.id,
@@ -116,9 +104,10 @@ def get_job(job_id: str, user: User = Depends(get_current_user), db: Session = D
         salary_min=job.salary_min,
         salary_max=job.salary_max,
         salary_currency=job.salary_currency,
-        match_score=job.match_score,
-        top_matched_skills=job.top_matched_skills,
-        missing_skills=job.missing_skills,
+        match_pct=int(job_match.match_pct) if job_match else 0,
+        matched_skills=job_match.matched_skills if job_match else [],
+        missing_skills=job_match.missing_skills if job_match else [],
+        top_keywords=job_match.top_keywords if job_match else [],
         posted_at=job.posted_at,
         source=job.source,
         url=job.url,
