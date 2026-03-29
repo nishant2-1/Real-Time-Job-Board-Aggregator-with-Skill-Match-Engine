@@ -11,7 +11,7 @@ from app.core.database import get_db
 from app.models.job_match import JobMatch
 from app.models.resume import Resume
 from app.models.user import User
-from app.schemas.resume import ResumeDeleteResponse, ResumeMeResponse, ResumeUploadResponse
+from app.schemas.resume import ResumeDeleteResponse, ResumeMeResponse, ResumeUpdateRequest, ResumeUploadResponse
 from app.services.matcher import SkillMatcher
 from app.services.resume_parser import ResumeParser
 from app.tasks.match_tasks import recompute_matches_for_user
@@ -96,6 +96,45 @@ def get_latest_resume(user: User = Depends(get_current_user), db: Session = Depe
     )
     if resume is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume not found")
+
+    return ResumeMeResponse(
+        resume_id=resume.id,
+        skills=resume.parsed_skills,
+        job_titles=resume.parsed_job_titles,
+        years_experience=resume.years_experience,
+        education_level=resume.education_level,
+        uploaded_at=resume.uploaded_at,
+        original_filename=resume.original_filename,
+        file_type=resume.file_type,
+    )
+
+
+@router.patch("/me", response_model=ResumeMeResponse)
+def update_latest_resume(
+    payload: ResumeUpdateRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> ResumeMeResponse:
+    resume = (
+        db.query(Resume)
+        .filter(Resume.user_id == user.id)
+        .order_by(Resume.uploaded_at.desc())
+        .first()
+    )
+    if resume is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume not found")
+
+    resume.parsed_skills = payload.skills
+    resume.parsed_job_titles = payload.job_titles
+    resume.years_experience = payload.years_experience
+    resume.education_level = payload.education_level
+    db.commit()
+    db.refresh(resume)
+
+    SkillMatcher().invalidate_user_cache(str(user.id))
+    db.query(JobMatch).filter(JobMatch.user_id == user.id).delete(synchronize_session=False)
+    db.commit()
+    recompute_matches_for_user.delay(str(user.id))
 
     return ResumeMeResponse(
         resume_id=resume.id,

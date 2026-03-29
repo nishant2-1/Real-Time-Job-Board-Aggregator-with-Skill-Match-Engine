@@ -1,24 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 
-import api from "../services/api";
-import type { JobsResponse } from "../types/job";
+import { getJobs } from "../services/api";
+import type { JobFilters, JobItem, JobsResponse } from "../types/job";
 
-interface UseJobsParams {
-  page: number;
-  limit: number;
-  sort: "match_score" | "date" | "salary";
-  remote?: boolean;
-  min_salary?: number;
-  min_match?: number;
-}
-
-export function useJobs(params: UseJobsParams) {
+export function useJobs(params: JobFilters) {
   return useQuery({
     queryKey: ["jobs", params],
-    queryFn: async () => {
-      const response = await api.get<JobsResponse>("/jobs", { params });
-      return response.data;
-    },
+    queryFn: () => getJobs(params),
     refetchInterval: 60_000,
   });
 }
+
+export type { JobItem, JobsResponse };

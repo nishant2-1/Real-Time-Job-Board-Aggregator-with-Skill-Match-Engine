@@ -25,3 +25,15 @@ class ResumeMeResponse(ResumeUploadResponse):
 
 class ResumeDeleteResponse(BaseModel):
     deleted: bool = Field(description="Whether a resume was deleted")
+
+
+class ResumeUpdateRequest(BaseModel):
+    skills: list[str] = Field(default_factory=list, description="Updated skill list")
+    job_titles: list[str] = Field(default_factory=list, description="Updated job titles")
+    years_experience: int = Field(ge=0, le=60, description="Updated years of experience")
+    education_level: str = Field(min_length=2, max_length=50, description="Updated education level")
+
+    @field_validator("skills", "job_titles")
+    @classmethod
+    def normalize_string_list(cls, value: list[str]) -> list[str]:
+        return sorted({item.strip() for item in value if item.strip()})
