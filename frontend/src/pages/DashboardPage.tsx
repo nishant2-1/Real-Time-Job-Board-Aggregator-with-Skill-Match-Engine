@@ -9,7 +9,7 @@ import { getResume, getScraperStatus, triggerScraper } from "../services/api";
 const CHART_COLORS = ["#2f5b40", "#5f8f6f", "#89b497", "#c8dbc9", "#152a1d"];
 const STATUS_COLOR: Record<string, string> = {
   success: "bg-alert-green",
-  partial: "bg-alert-amber",
+  partial: "bg-alert-red",
   failed: "bg-alert-red",
 };
 

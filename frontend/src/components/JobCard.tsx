@@ -7,7 +7,7 @@ import type { Job } from "../types";
 
 function badgeColor(match?: number | null): string {
   if (!match && match !== 0) return "bg-slate-200 text-slate-700";
-  if (match > 70) return "bg-alert-green/15 text-alert-green";
+  if (match >= 70) return "bg-alert-green/15 text-alert-green";
   if (match >= 40) return "bg-alert-amber/15 text-alert-amber";
   return "bg-alert-red/15 text-alert-red";
 }
@@ -38,7 +38,7 @@ interface JobCardProps {
 }
 
 export default function JobCard({ job, isSaved, onToggleSaved }: JobCardProps) {
-  const hasScore = job.match_pct !== null && job.match_pct !== undefined;
+  const score = job.match_pct ?? 0;
   const saveMutation = useMutation({
     mutationFn: () => saveJob(job.id),
     onMutate: () => onToggleSaved(job.id),
@@ -77,18 +77,19 @@ export default function JobCard({ job, isSaved, onToggleSaved }: JobCardProps) {
         </div>
         <div className="flex items-center gap-3">
           <span className={clsx("rounded-full px-4 py-2 text-sm font-semibold", badgeColor(job.match_pct))}>
-            {hasScore ? `${job.match_pct}% match` : "No score"}
+            {`${score}% match`}
           </span>
           <button
             type="button"
             onClick={() => saveMutation.mutate()}
             disabled={saveMutation.isPending}
+            aria-label={isSaved ? "Unsave job" : "Save job"}
             className={clsx(
-              "rounded-2xl border px-4 py-2 text-sm font-semibold transition",
+              "inline-flex h-10 w-10 items-center justify-center rounded-2xl border text-lg transition",
               isSaved ? "border-radar-900 bg-radar-900 text-white" : "border-radar-300 text-radar-800 hover:border-radar-700",
             )}
           >
-            {saveMutation.isPending ? "Updating..." : isSaved ? "Saved" : "Save"}
+            {saveMutation.isPending ? "..." : isSaved ? "★" : "☆"}
           </button>
         </div>
       </header>
@@ -100,7 +101,7 @@ export default function JobCard({ job, isSaved, onToggleSaved }: JobCardProps) {
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-radar-500">Matched skills</p>
           <div className="mt-3 flex flex-wrap gap-2">
             {job.matched_skills.length ? (
-              job.matched_skills.slice(0, 8).map((skill) => (
+              job.matched_skills.slice(0, 3).map((skill) => (
                 <span key={skill} className="rounded-full bg-radar-100 px-3 py-1 text-xs font-medium text-radar-700">
                   {skill}
                 </span>
@@ -114,9 +115,9 @@ export default function JobCard({ job, isSaved, onToggleSaved }: JobCardProps) {
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-radar-500">Missing skills</p>
           <div className="mt-3 flex flex-wrap gap-2">
             {job.missing_skills.length ? (
-              job.missing_skills.slice(0, 8).map((skill) => (
+              job.missing_skills.slice(0, 2).map((skill) => (
                 <span key={skill} className="rounded-full bg-alert-red/10 px-3 py-1 text-xs font-medium text-alert-red">
-                  {skill}
+                  missing {skill}
                 </span>
               ))
             ) : (

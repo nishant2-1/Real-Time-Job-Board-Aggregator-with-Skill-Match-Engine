@@ -78,7 +78,7 @@ export default function ResumePage() {
     });
   };
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
     accept: {
       "application/pdf": [".pdf"],
@@ -125,6 +125,13 @@ export default function ResumePage() {
           <div className="mt-5 rounded-2xl bg-radar-50 px-4 py-4 text-sm text-radar-700">
             Current file: {resume?.original_filename ?? "No resume uploaded"}
           </div>
+          <button
+            type="button"
+            onClick={open}
+            className="mt-4 rounded-2xl border border-radar-300 px-4 py-2 text-sm font-semibold text-radar-800 transition hover:border-radar-700"
+          >
+            Re-upload
+          </button>
         </div>
 
         <div className="card rounded-[1.75rem]">
@@ -171,6 +178,12 @@ export default function ResumePage() {
                   />
                 </label>
               </div>
+
+              {draft.educationLevel ? (
+                <div className="inline-flex rounded-full bg-radar-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-radar-700">
+                  {draft.educationLevel}
+                </div>
+              ) : null}
 
               <label className="space-y-2">
                 <span className="text-sm font-semibold text-radar-800">Job titles</span>

@@ -25,7 +25,7 @@ export default function JobsPage() {
 
   const { data, isLoading, isFetching } = useJobs({
     page,
-    limit: 12,
+    limit: 20,
     sort,
     remote: remoteOnly ? true : undefined,
     min_salary: Number.isFinite(minSalary) ? minSalary : undefined,
