@@ -18,6 +18,22 @@ router = APIRouter(prefix="/scraper", tags=["scraper"])
 
 @router.get("/status")
 def scraper_status(user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
+    latest_run_subquery = (
+        db.query(
+            ScraperRun.source.label("source"),
+            func.max(ScraperRun.finished_at).label("last_finished_at"),
+        )
+        .group_by(ScraperRun.source)
+        .subquery()
+    )
+
+    latest_run_status_rows = db.query(ScraperRun.source, ScraperRun.status).join(
+        latest_run_subquery,
+        (ScraperRun.source == latest_run_subquery.c.source)
+        & (ScraperRun.finished_at == latest_run_subquery.c.last_finished_at),
+    ).all()
+    latest_run_status = {row.source: row.status for row in latest_run_status_rows}
+
     per_source_runs = (
         db.query(
             ScraperRun.source,
@@ -47,6 +63,7 @@ def scraper_status(user: User = Depends(get_current_user), db: Session = Depends
                 "jobs_new": int(item.jobs_new or 0),
                 "jobs_updated": int(item.jobs_updated or 0),
                 "jobs_total": int(per_source_jobs.get(item.source, 0)),
+                "status": latest_run_status.get(item.source, "unknown"),
             }
             for item in per_source_runs
         ]
