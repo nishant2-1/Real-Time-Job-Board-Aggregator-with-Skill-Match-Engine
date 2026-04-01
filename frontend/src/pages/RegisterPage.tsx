@@ -1,4 +1,5 @@
 import { useState } from "react";
+import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
@@ -40,9 +41,15 @@ export default function RegisterPage() {
       await register({ full_name: fullName, email, password });
       toast.success("Account created");
       navigate("/dashboard", { replace: true });
-    } catch {
-      toast.error("Unable to create account");
-      setErrors({ form: "Registration failed. Try a different email or try again later." });
+    } catch (error) {
+      const apiMessage = axios.isAxiosError(error)
+        ? (error.response?.data as { detail?: string; error?: { message?: string } } | undefined)?.detail
+            || (error.response?.data as { detail?: string; error?: { message?: string } } | undefined)?.error?.message
+        : undefined;
+      const fallback = "Registration failed. Try a different email or try again later.";
+      const message = apiMessage || fallback;
+      toast.error(message);
+      setErrors({ form: message });
     }
   };
 

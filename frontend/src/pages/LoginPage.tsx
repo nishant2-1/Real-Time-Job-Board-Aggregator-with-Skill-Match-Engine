@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import axios from "axios";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
@@ -35,9 +36,15 @@ export default function LoginPage() {
       await login({ email, password });
       toast.success("Welcome back");
       navigate(redirectTo, { replace: true });
-    } catch {
-      setErrors({ form: "Login failed. Check your credentials and try again." });
-      toast.error("Login failed");
+    } catch (error) {
+      const apiMessage = axios.isAxiosError(error)
+        ? (error.response?.data as { detail?: string; error?: { message?: string } } | undefined)?.detail
+            || (error.response?.data as { detail?: string; error?: { message?: string } } | undefined)?.error?.message
+        : undefined;
+      const fallback = "Login failed. Check your credentials and try again.";
+      const message = apiMessage || fallback;
+      setErrors({ form: message });
+      toast.error(message);
     }
   };
 
