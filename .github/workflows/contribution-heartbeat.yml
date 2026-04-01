@@ -1,0 +1,39 @@
+name: Contribution Heartbeat
+
+on:
+  schedule:
+    # Runs once daily. Adjust cron if you want a different timezone slot.
+    - cron: "17 18 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  heartbeat:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure commit identity
+        run: |
+          git config user.name "nishant2-1"
+          git config user.email "nishant2-1@users.noreply.github.com"
+
+      - name: Append daily heartbeat
+        run: |
+          mkdir -p .github
+          echo "$(date -u +'%Y-%m-%d %H:%M:%S UTC') heartbeat" >> .github/heartbeat.log
+
+      - name: Commit and push
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          git add .github/heartbeat.log
+          git commit -m "chore: daily contribution heartbeat"
+          git push
