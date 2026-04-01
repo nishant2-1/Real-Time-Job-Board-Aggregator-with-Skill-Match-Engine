@@ -1,4 +1,4 @@
-# JobRadar - AI-Powered Job Aggregator & Skill Match Engine
+# JobRadar - Real-Time Job Aggregator with Resume Skill Match Intelligence
 
 ![Python 3.11](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.11x-009688?logo=fastapi&logoColor=white)
@@ -9,52 +9,193 @@
 ![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?logo=docker&logoColor=white)
 ![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)
 
-## What it does
-JobRadar continuously aggregates software job listings from multiple external sources into a unified feed and scores each role against a user resume. It helps candidates prioritize the highest-fit opportunities first, while showing concrete skill gaps for targeted upskilling.
+## Overview
+JobRadar is a full-stack job discovery platform that automates job search and ranking.
 
-## How the skill match works
-JobRadar first converts resume text and job descriptions into TF-IDF vectors so both are represented in a consistent mathematical space. It then measures cosine similarity to estimate how semantically close a role is to the resume. A keyword boost is applied when exact high-value skills overlap, which helps reward practical tool alignment beyond pure vector similarity. The final score is capped to a 0-100 range and returned with matched and missing skills for explainability.
+Instead of manually checking multiple sites every day, JobRadar:
+- Aggregates jobs from RemoteOK, Remotive, and Adzuna
+- Removes duplicates with Redis fingerprinting
+- Parses uploaded resumes (PDF or DOCX)
+- Computes a skill-match score for each job using NLP
+- Presents ranked opportunities in a responsive React dashboard
 
-## Architecture
+In one line: JobRadar acts like a personal job search engine that continuously finds, deduplicates, and ranks opportunities by your profile fit.
+
+## Core System Components
+
+### 1) Scraper Engine (Background Ingestion)
+- Scheduled with Celery Beat every 30 minutes
+- Fetches jobs from external providers using HTTP clients
+- Normalizes heterogeneous payloads into a common schema
+- Stores job fingerprints in Redis to avoid duplicates
+- Persists clean job records in PostgreSQL
+
+Interview summary:
+Built an async scraping pipeline with Celery scheduling and Redis hash-based deduplication across three external job sources.
+
+### 2) Resume Parser (Unstructured to Structured Data)
+- Accepts PDF and DOCX uploads
+- Extracts text with PyMuPDF and python-docx
+- Uses spaCy plus regex heuristics to identify:
+  - skills
+  - role titles
+  - education indicators
+  - experience cues
+
+Interview summary:
+Converted unstructured resume documents into structured candidate features using NLP and rule-based extraction.
+
+### 3) Skill-Match Engine (Ranking Intelligence)
+- Vectorizes resume text and job descriptions with TF-IDF
+- Computes cosine similarity between vectors
+- Applies keyword overlap boosts for explicit skill matches
+- Returns normalized score in 0-100 range
+- Caches score lookups in Redis for faster repeat responses
+
+Interview summary:
+Implemented a TF-IDF plus cosine similarity matcher with deterministic skill boosting and Redis-backed result caching.
+
+### 4) FastAPI Backend (Platform Control Plane)
+- JWT-based registration and login
+- Resume upload and profile endpoints
+- Job listing endpoints with filter and sort controls
+- Scraper trigger and status endpoints
+- Rate limiting, request ID tracing, and structured logging
+- OpenAPI docs automatically available at /docs
+
+Interview summary:
+Developed a production-style FastAPI service with authentication, observability, and guarded API traffic.
+
+### 5) React Frontend (User Experience Layer)
+- React 18, TypeScript, Tailwind CSS
+- Dashboard for activity and match analytics
+- Jobs view with filters and save actions
+- Resume upload and editable parsed metadata
+- React Query data caching and loading/error states
+
+Interview summary:
+Built a type-safe React application with query caching, reusable hooks, and responsive workflows for job discovery.
+
+## System Architecture
+
 ```mermaid
 flowchart LR
-  FE[React Frontend] --> API[FastAPI]
+  U[User Browser] --> FE[React Frontend]
+  FE --> API[FastAPI API Layer]
+
   API --> PG[(PostgreSQL)]
   API --> RD[(Redis)]
-  API --> CW[Celery Worker]
-  CW --> ROK[RemoteOK]
-  CW --> REM[Remotive]
-  CW --> ADZ[Adzuna]
+
+  CB[Celery Beat Scheduler] --> CW[Celery Worker]
+  CW --> ROK[RemoteOK API]
+  CW --> REM[Remotive API]
+  CW --> ADZ[Adzuna API]
+
+  CW --> PG
+  CW --> RD
+
+  API --> RS[Resume Parser Service]
+  API --> MM[Match Engine Service]
+  RS --> API
+  MM --> API
 ```
 
-## Local setup
+## System Design Notes
+
+### Data Flow
+1. Celery Beat triggers scheduled scraping tasks.
+2. Worker fetches and normalizes external jobs.
+3. Redis fingerprint check prevents duplicate inserts.
+4. Unique jobs are written to PostgreSQL.
+5. User uploads resume through frontend.
+6. Backend parses resume and stores structured profile data.
+7. Match engine computes score between resume and jobs.
+8. Ranked jobs are returned via API and rendered by frontend.
+
+### Scalability and Reliability Decisions
+- Asynchronous background jobs isolate scraping load from API latency.
+- Redis provides low-latency deduplication and score caching.
+- PostgreSQL stores normalized, queryable job and user entities.
+- Containerized services simplify local parity and deployment workflows.
+- API rate limits and structured logs improve operational safety and debugging.
+
+### Security and Observability
+- JWT access and refresh token model
+- Request-level tracing with request IDs
+- Structured JSON-style logging for troubleshooting
+- Input validation with Pydantic schemas
+
+## Tech Stack
+
+| Layer | Technology | Why |
+|---|---|---|
+| Frontend | React 18, TypeScript, Tailwind CSS, React Query | Type-safe UI with strong state and data handling |
+| Backend API | FastAPI, Pydantic, SQLAlchemy, Alembic | High-performance API with validation and schema migrations |
+| Background Tasks | Celery, Redis | Scheduled and asynchronous processing |
+| Database | PostgreSQL | Relational consistency and robust querying |
+| NLP and Matching | spaCy, scikit-learn, PyMuPDF, python-docx | Resume parsing and vector-based relevance scoring |
+| DevOps | Docker, Docker Compose, GitHub Actions | Repeatable environments and CI pipelines |
+
+## Quick Start (Docker)
+
 ```bash
 git clone https://github.com/nishant2-1/Real-Time-Job-Board-Aggregator-with-Skill-Match-Engine.git
 cd Real-Time-Job-Board-Aggregator-with-Skill-Match-Engine/jobrador
 cp .env.example .env
-# Fill ADZUNA_APP_ID, ADZUNA_APP_KEY, and SECRET_KEY in .env
 docker compose up --build
 ```
 
-Open http://localhost:3000 - API docs: http://localhost:8000/docs
+Access points:
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+- API Docs: http://localhost:8000/docs
 
-## Features
-- Multi-source job ingestion via Celery workers (RemoteOK, Remotive, Adzuna)
-- Resume parsing for PDF/DOCX with extracted skills, titles, and experience signals
-- AI-assisted match scoring with TF-IDF, cosine similarity, and skill boosting
-- Real-time dashboard with scraper status, top matches, and skill breakdown charts
-- Saved jobs workflow with optimistic UI updates in React Query
-- End-to-end containerized local stack with FastAPI, PostgreSQL, Redis, Celery, and React
+## Local Development (Without Docker)
 
-## Tech stack
-| Layer | Technologies |
-|---|---|
-| Frontend | React 18, TypeScript, Tailwind CSS, React Query, Recharts |
-| Backend API | FastAPI, Pydantic, SQLAlchemy, Alembic |
-| Async/Workers | Celery, Redis |
-| Data | PostgreSQL |
-| Resume/ML | PyMuPDF, python-docx, scikit-learn (TF-IDF + cosine) |
-| DevOps | Docker, Docker Compose, GitHub Actions |
+Prerequisites:
+- Python 3.11+
+- Node.js 18+
+- PostgreSQL
+- Redis
+
+Backend:
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python -m alembic upgrade head
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Frontend:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## API Surface (High-Level)
+- POST /auth/register
+- POST /auth/login
+- POST /auth/refresh
+- GET /jobs
+- POST /resume/upload
+- GET /resume/me
+- PATCH /resume/me
+- GET /scraper/status
+- POST /scraper/trigger
+
+See complete interactive schema at /docs.
+
+## Suggested Interview Pitch
+JobRadar is a full-stack job aggregation and ranking platform that ingests postings from multiple sources, parses resume content with NLP, and computes skill-match scores using TF-IDF cosine similarity, all delivered through a FastAPI plus React architecture with Redis, PostgreSQL, and Dockerized CI workflows.
+
+## Roadmap Ideas
+- Source-specific relevance tuning and confidence weighting
+- Personalized recommendation feedback loops
+- Alerting pipeline for newly discovered high-match jobs
+- Role-based access controls and admin analytics views
 
 ## License
 MIT
