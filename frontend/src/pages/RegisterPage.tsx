@@ -45,6 +45,7 @@ export default function RegisterPage() {
       const apiMessage = axios.isAxiosError(error)
         ? (error.response?.data as { detail?: string; error?: { message?: string } } | undefined)?.detail
             || (error.response?.data as { detail?: string; error?: { message?: string } } | undefined)?.error?.message
+            || error.message
         : undefined;
       const fallback = "Registration failed. Try a different email or try again later.";
       const message = apiMessage || fallback;

@@ -40,6 +40,7 @@ export default function LoginPage() {
       const apiMessage = axios.isAxiosError(error)
         ? (error.response?.data as { detail?: string; error?: { message?: string } } | undefined)?.detail
             || (error.response?.data as { detail?: string; error?: { message?: string } } | undefined)?.error?.message
+            || error.message
         : undefined;
       const fallback = "Login failed. Check your credentials and try again.";
       const message = apiMessage || fallback;
