@@ -35,9 +35,11 @@ interface JobCardProps {
   job: Job;
   isSaved: boolean;
   onToggleSaved: (jobId: string) => void;
+  isSelected?: boolean;
+  onSelect?: (jobId: string) => void;
 }
 
-export default function JobCard({ job, isSaved, onToggleSaved }: JobCardProps) {
+export default function JobCard({ job, isSaved, onToggleSaved, isSelected = false, onSelect }: JobCardProps) {
   const score = job.match_pct ?? 0;
   const saveMutation = useMutation({
     mutationFn: () => saveJob(job.id),
@@ -52,7 +54,12 @@ export default function JobCard({ job, isSaved, onToggleSaved }: JobCardProps) {
   });
 
   return (
-    <article className="card space-y-5 rounded-[1.75rem] border border-radar-300/60 bg-white/95">
+    <article
+      className={clsx(
+        "card space-y-5 rounded-[1.75rem] border bg-white/95 transition",
+        isSelected ? "border-radar-900 shadow-[0_24px_70px_-35px_rgba(21,42,29,0.45)]" : "border-radar-300/60",
+      )}
+    >
       <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex items-start gap-4">
           {job.company_logo_url ? (
@@ -68,8 +75,10 @@ export default function JobCard({ job, isSaved, onToggleSaved }: JobCardProps) {
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="font-display text-xl font-bold">{job.title}</h3>
+              {isSelected ? <span className="rounded-full bg-radar-900 px-3 py-1 text-xs font-semibold text-white">Selected</span> : null}
               <span className="rounded-full bg-radar-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-radar-700">{job.source ?? "source"}</span>
               {job.is_remote ? <span className="rounded-full bg-alert-green/15 px-3 py-1 text-xs font-semibold text-alert-green">Remote</span> : null}
+              {job.visa_sponsorship ? <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">Visa sponsored</span> : null}
             </div>
             <p className="mt-2 text-sm text-radar-700">{job.company} • {job.location}</p>
             <p className="mt-2 text-sm text-radar-700">{formatSalary(job)}</p>
@@ -127,13 +136,34 @@ export default function JobCard({ job, isSaved, onToggleSaved }: JobCardProps) {
         </div>
       </div>
 
+      {job.tags?.length ? (
+        <div className="flex flex-wrap gap-2">
+          {job.tags.slice(0, 5).map((tag) => (
+            <span key={tag} className="rounded-full bg-radar-50 px-3 py-1 text-xs font-medium text-radar-700">
+              {tag}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-radar-200 pt-4 text-sm text-radar-700">
         <span>Posted {new Date(job.posted_at).toLocaleDateString()}</span>
-        {job.url ? (
-          <a href={job.url} target="_blank" rel="noreferrer" className="font-semibold text-radar-900 underline decoration-radar-300 underline-offset-4">
-            Open listing
-          </a>
-        ) : null}
+        <div className="flex flex-wrap items-center gap-3">
+          {onSelect ? (
+            <button
+              type="button"
+              onClick={() => onSelect(job.id)}
+              className="font-semibold text-radar-900 underline decoration-radar-300 underline-offset-4"
+            >
+              View details
+            </button>
+          ) : null}
+          {job.url ? (
+            <a href={job.url} target="_blank" rel="noreferrer" className="font-semibold text-radar-900 underline decoration-radar-300 underline-offset-4">
+              Open listing
+            </a>
+          ) : null}
+        </div>
       </div>
     </article>
   );

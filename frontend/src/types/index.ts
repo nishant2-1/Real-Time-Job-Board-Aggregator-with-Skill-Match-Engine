@@ -44,6 +44,7 @@ export interface Job extends JobMatch {
   description_raw?: string;
   description_clean?: string;
   tags?: string[];
+  visa_sponsorship?: boolean;
 }
 
 export interface Resume {
@@ -95,7 +96,9 @@ export interface PaginatedResponse<T> {
 
 export interface JobFilters {
   sort?: "match_score" | "date" | "salary";
+  query?: string;
   remote?: boolean;
+  visa_sponsorship?: boolean;
   min_match?: number;
   page?: number;
   limit?: number;
