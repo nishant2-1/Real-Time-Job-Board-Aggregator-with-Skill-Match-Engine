@@ -1,3 +1,4 @@
+import json
 from functools import lru_cache
 from typing import Any
 
@@ -60,6 +61,11 @@ class Settings(BaseSettings):
     @classmethod
     def parse_cors_origins(cls, value: Any) -> list[str]:
         if isinstance(value, str):
+            stripped = value.strip()
+            if stripped.startswith("["):
+                parsed = json.loads(stripped)
+                if isinstance(parsed, list):
+                    return [str(origin).strip() for origin in parsed if str(origin).strip()]
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         if isinstance(value, list):
             return value
@@ -69,6 +75,11 @@ class Settings(BaseSettings):
     @classmethod
     def parse_admin_emails(cls, value: Any) -> list[str]:
         if isinstance(value, str):
+            stripped = value.strip()
+            if stripped.startswith("["):
+                parsed = json.loads(stripped)
+                if isinstance(parsed, list):
+                    return [str(email).strip().lower() for email in parsed if str(email).strip()]
             return [email.strip().lower() for email in value.split(",") if email.strip()]
         if isinstance(value, list):
             return [str(email).strip().lower() for email in value if str(email).strip()]
