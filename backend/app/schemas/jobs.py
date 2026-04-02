@@ -24,6 +24,7 @@ class JobListItem(BaseModel):
     url: str = Field(description="Original job URL")
     description_clean: str = Field(description="Plain text description")
     tags: list[str] = Field(default_factory=list, description="Job tags from source")
+    is_direct_source: bool = Field(default=False, description="Whether the role came from a direct ATS company feed")
     visa_sponsorship: bool = Field(default=False, description="Whether the role likely supports visa sponsorship")
 
 
@@ -50,6 +51,7 @@ class JobQueryParams(BaseModel):
     sort: str = Field(default="match_score", description="Sort field")
     query: str | None = Field(default=None, description="Keyword search across title, company, location, and description")
     remote: bool | None = Field(default=None, description="Remote-only filter")
+    direct_only: bool | None = Field(default=None, description="Filter roles sourced directly from company ATS feeds")
     visa_sponsorship: bool | None = Field(default=None, description="Filter roles that likely support visa sponsorship")
     min_salary: float | None = Field(default=None, ge=0, description="Minimum salary filter")
     min_match: int | None = Field(default=None, ge=0, le=100, description="Minimum match percentage")

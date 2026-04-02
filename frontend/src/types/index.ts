@@ -44,6 +44,7 @@ export interface Job extends JobMatch {
   description_raw?: string;
   description_clean?: string;
   tags?: string[];
+  is_direct_source?: boolean;
   visa_sponsorship?: boolean;
 }
 
@@ -98,6 +99,7 @@ export interface JobFilters {
   sort?: "match_score" | "date" | "salary";
   query?: string;
   remote?: boolean;
+  direct_only?: boolean;
   visa_sponsorship?: boolean;
   min_match?: number;
   page?: number;

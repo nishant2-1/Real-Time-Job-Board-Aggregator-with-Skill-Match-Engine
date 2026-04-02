@@ -54,6 +54,8 @@ class Settings(BaseSettings):
 
     adzuna_app_id: str = Field(default="", description="Adzuna API app id")
     adzuna_app_key: str = Field(default="", description="Adzuna API app key")
+    greenhouse_boards: list[str] = Field(default_factory=list, description="Greenhouse board tokens for direct company feeds")
+    lever_companies: list[str] = Field(default_factory=list, description="Lever company identifiers for direct company feeds")
 
     rate_limit_default: str = Field(default="60/minute", description="Default API rate limit")
     scrape_interval_minutes: int = Field(default=30, description="Scraper schedule interval")
@@ -89,6 +91,22 @@ class Settings(BaseSettings):
         if isinstance(value, list):
             return [str(email).strip().lower() for email in value if str(email).strip()]
         raise ValueError("admin_emails must be a comma-separated string or list")
+
+    @field_validator("greenhouse_boards", "lever_companies", mode="before")
+    @classmethod
+    def parse_company_feed_lists(cls, value: Any) -> list[str]:
+        if isinstance(value, str):
+            stripped = value.strip()
+            if not stripped:
+                return []
+            if stripped.startswith("["):
+                parsed = json.loads(stripped)
+                if isinstance(parsed, list):
+                    return [str(item).strip() for item in parsed if str(item).strip()]
+            return [item.strip() for item in stripped.split(",") if item.strip()]
+        if isinstance(value, list):
+            return [str(item).strip() for item in value if str(item).strip()]
+        raise ValueError("company feed lists must be a comma-separated string or list")
 
     @property
     def sqlalchemy_database_uri(self) -> str:

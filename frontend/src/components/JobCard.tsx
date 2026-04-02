@@ -31,6 +31,22 @@ function formatSalary(job: Job): string {
   return `Up to ${formatter.format(job.salary_max ?? 0)}`;
 }
 
+function formatSourceLabel(source?: string): string {
+  if (!source) {
+    return "Source";
+  }
+
+  const labels: Record<string, string> = {
+    remoteok: "RemoteOK",
+    remotive: "Remotive",
+    adzuna: "Adzuna",
+    greenhouse: "Greenhouse",
+    lever: "Lever",
+  };
+
+  return labels[source] ?? source;
+}
+
 interface JobCardProps {
   job: Job;
   isSaved: boolean;
@@ -76,7 +92,8 @@ export default function JobCard({ job, isSaved, onToggleSaved, isSelected = fals
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="font-display text-xl font-bold">{job.title}</h3>
               {isSelected ? <span className="rounded-full bg-radar-900 px-3 py-1 text-xs font-semibold text-white">Selected</span> : null}
-              <span className="rounded-full bg-radar-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-radar-700">{job.source ?? "source"}</span>
+              <span className="rounded-full bg-radar-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-radar-700">{formatSourceLabel(job.source)}</span>
+              {job.is_direct_source ? <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">Direct company feed</span> : null}
               {job.is_remote ? <span className="rounded-full bg-alert-green/15 px-3 py-1 text-xs font-semibold text-alert-green">Remote</span> : null}
               {job.visa_sponsorship ? <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">Visa sponsored</span> : null}
             </div>

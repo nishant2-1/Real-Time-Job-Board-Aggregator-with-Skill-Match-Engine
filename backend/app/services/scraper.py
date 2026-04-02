@@ -23,6 +23,24 @@ logger = logging.getLogger(__name__)
 WHITESPACE_RE = re.compile(r"\s+")
 
 
+def _looks_remote(*values: str | None) -> bool:
+    text = " ".join(filter(None, values)).lower()
+    return any(keyword in text for keyword in ["remote", "distributed", "work from home", "anywhere"])
+
+
+def _parse_datetime(value: str | None) -> datetime:
+    if not value:
+        return datetime.now(tz=UTC)
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return datetime.now(tz=UTC)
+
+
+def _titleize_identifier(value: str) -> str:
+    return value.replace("-", " ").replace("_", " ").strip().title() or "Unknown"
+
+
 @dataclass
 class NormalizedJob:
     source: str
@@ -324,4 +342,113 @@ class AdzunaScraper(AsyncJobScraper):
                     metadata_json={"category": str(item.get("category", {}).get("label") or "")},
                 )
             )
+        return jobs
+
+
+class GreenhouseScraper(AsyncJobScraper):
+    source_name = "greenhouse"
+
+    async def fetch(self) -> Any:
+        if not settings.greenhouse_boards:
+            return []
+
+        payloads: list[dict[str, Any]] = []
+        for board in settings.greenhouse_boards:
+            payload = await self._request_json(f"https://boards-api.greenhouse.io/v1/boards/{board}/jobs", params={"content": "true"})
+            payloads.append({"board": board, "payload": payload})
+        return payloads
+
+    def parse(self, payload: Any) -> list[NormalizedJob]:
+        jobs: list[NormalizedJob] = []
+        if not isinstance(payload, list):
+            return jobs
+
+        for board_payload in payload:
+            if not isinstance(board_payload, dict):
+                continue
+            board = str(board_payload.get("board") or "greenhouse")
+            board_jobs = board_payload.get("payload", {}).get("jobs", [])
+            if not isinstance(board_jobs, list):
+                continue
+
+            for item in board_jobs:
+                if not isinstance(item, dict):
+                    continue
+                location = str(item.get("location", {}).get("name") or "Unknown")
+                raw_metadata = item.get("metadata")
+                metadata = raw_metadata if isinstance(raw_metadata, list) else []
+                tags = [str(entry.get("value")) for entry in metadata if isinstance(entry, dict) and entry.get("value")]
+                jobs.append(
+                    NormalizedJob(
+                        source=self.source_name,
+                        external_id=str(item.get("id") or ""),
+                        url=str(item.get("absolute_url") or ""),
+                        company=_titleize_identifier(board),
+                        title=str(item.get("title") or "Untitled"),
+                        location=location,
+                        is_remote=_looks_remote(location, str(item.get("content") or "")),
+                        description_raw=str(item.get("content") or ""),
+                        posted_at=_parse_datetime(str(item.get("updated_at") or item.get("created_at") or "")),
+                        tags=tags,
+                        metadata_json={"board": board, "provider": "greenhouse"},
+                    )
+                )
+
+        return jobs
+
+
+class LeverScraper(AsyncJobScraper):
+    source_name = "lever"
+
+    async def fetch(self) -> Any:
+        if not settings.lever_companies:
+            return []
+
+        payloads: list[dict[str, Any]] = []
+        for company in settings.lever_companies:
+            payload = await self._request_json(f"https://api.lever.co/v0/postings/{company}", params={"mode": "json"})
+            payloads.append({"company": company, "payload": payload})
+        return payloads
+
+    def parse(self, payload: Any) -> list[NormalizedJob]:
+        jobs: list[NormalizedJob] = []
+        if not isinstance(payload, list):
+            return jobs
+
+        for company_payload in payload:
+            if not isinstance(company_payload, dict):
+                continue
+            company_identifier = str(company_payload.get("company") or "lever")
+            company_name = _titleize_identifier(company_identifier)
+            postings = company_payload.get("payload")
+            if not isinstance(postings, list):
+                continue
+
+            for item in postings:
+                if not isinstance(item, dict):
+                    continue
+                raw_categories = item.get("categories")
+                categories = raw_categories if isinstance(raw_categories, dict) else {}
+                location = str(categories.get("location") or "Unknown")
+                tags = [
+                    str(value)
+                    for value in [categories.get("commitment"), categories.get("team"), categories.get("department")]
+                    if value
+                ]
+                jobs.append(
+                    NormalizedJob(
+                        source=self.source_name,
+                        external_id=str(item.get("id") or ""),
+                        url=str(item.get("hostedUrl") or item.get("applyUrl") or ""),
+                        company=company_name,
+                        title=str(item.get("text") or "Untitled"),
+                        location=location,
+                        is_remote=_looks_remote(location, str(item.get("description") or "")),
+                        description_raw=str(item.get("description") or ""),
+                        posted_at=_parse_datetime(str(item.get("createdAt") or "")),
+                        tags=tags,
+                        metadata_json={"company": company_identifier, "provider": "lever"},
+                    )
+                )
+
         return jobs

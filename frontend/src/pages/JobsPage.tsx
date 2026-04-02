@@ -43,7 +43,7 @@ export default function JobsPage() {
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<"match_score" | "date" | "salary">("match_score");
   const [searchInput, setSearchInput] = useState("");
-  const [jobView, setJobView] = useState<"all" | "remote" | "visa">("all");
+  const [jobView, setJobView] = useState<"all" | "direct" | "remote" | "visa">("all");
   const [minSalaryInput, setMinSalaryInput] = useState("");
   const [minMatch, setMinMatch] = useState(0);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
@@ -51,6 +51,7 @@ export default function JobsPage() {
   const deferredMinSalary = useDeferredValue(minSalaryInput);
   const minSalary = deferredMinSalary ? Number(deferredMinSalary) : undefined;
   const remoteOnly = jobView === "remote" ? true : undefined;
+  const directOnly = jobView === "direct" ? true : undefined;
   const visaOnly = jobView === "visa" ? true : undefined;
 
   const { data, isLoading, isFetching } = useJobs({
@@ -59,6 +60,7 @@ export default function JobsPage() {
     sort,
     query: deferredSearch || undefined,
     remote: remoteOnly,
+    direct_only: directOnly,
     visa_sponsorship: visaOnly,
     min_salary: Number.isFinite(minSalary) ? minSalary : undefined,
     min_match: minMatch,
@@ -67,6 +69,13 @@ export default function JobsPage() {
     page: 1,
     limit: 4,
     sort: "date",
+    direct_only: true,
+  });
+  const { data: directJobs } = useJobs({
+    page: 1,
+    limit: 4,
+    sort: "date",
+    direct_only: true,
     visa_sponsorship: true,
   });
   const { data: resume } = useQuery({
@@ -89,10 +98,12 @@ export default function JobsPage() {
 
   const jobs = useMemo(() => data?.items ?? [], [data?.items]);
   const featuredVisaJobs = useMemo(() => visaJobs?.items ?? [], [visaJobs?.items]);
+  const featuredDirectJobs = useMemo(() => directJobs?.items ?? [], [directJobs?.items]);
   const selectedJob = useMemo(
-    () => jobs.find((job) => job.id === selectedJobId) ?? featuredVisaJobs.find((job) => job.id === selectedJobId) ?? jobs[0] ?? null,
-    [featuredVisaJobs, jobs, selectedJobId],
+    () => jobs.find((job) => job.id === selectedJobId) ?? featuredVisaJobs.find((job) => job.id === selectedJobId) ?? featuredDirectJobs.find((job) => job.id === selectedJobId) ?? jobs[0] ?? null,
+    [featuredDirectJobs, featuredVisaJobs, jobs, selectedJobId],
   );
+  const directCount = jobs.filter((job) => job.is_direct_source).length;
   const remoteCount = jobs.filter((job) => job.is_remote).length;
   const visaCount = jobs.filter((job) => job.visa_sponsorship).length;
   const averageMatch = jobs.length
@@ -119,8 +130,8 @@ export default function JobsPage() {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-radar-500">Jobs</p>
-          <h1 className="mt-2 font-display text-4xl font-bold">Live roles ranked by your resume</h1>
-          <p className="mt-3 max-w-3xl text-radar-700">Search across global roles, narrow to remote jobs, or focus on visa-sponsored openings without losing the broader market view.</p>
+          <h1 className="mt-2 font-display text-4xl font-bold">A board view for direct feeds, remote lanes, and recruiter-style review</h1>
+          <p className="mt-3 max-w-4xl text-radar-700">Search across live roles, isolate direct company ATS feeds, keep a selected-role cockpit open, and compare market signals without losing speed.</p>
         </div>
         <div className="rounded-2xl bg-radar-100 px-4 py-3 text-sm text-radar-700">
           Showing {jobs.length} of {data?.total ?? 0} jobs {isFetching ? "• refreshing" : ""}
@@ -139,6 +150,7 @@ export default function JobsPage() {
           <div className="flex flex-wrap gap-2">
             {[
               { key: "all", label: "All global roles" },
+              { key: "direct", label: "Direct company feeds" },
               { key: "remote", label: "Remote-first roles" },
               { key: "visa", label: "Visa-sponsored roles" },
             ].map((item) => (
@@ -147,7 +159,7 @@ export default function JobsPage() {
                 type="button"
                 onClick={() => {
                   setPage(1);
-                  setJobView(item.key as "all" | "remote" | "visa");
+                  setJobView(item.key as "all" | "direct" | "remote" | "visa");
                 }}
                 className={[
                   "rounded-full px-4 py-2 text-sm font-semibold transition",
@@ -232,12 +244,17 @@ export default function JobsPage() {
         <div className="card rounded-[1.75rem]">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-radar-500">Market snapshot</p>
           <h2 className="mt-2 font-display text-2xl font-bold">Browse it like a real hiring board</h2>
-          <p className="mt-2 text-sm text-radar-700">Use the left rail to scan quickly, then keep one role open in the detail cockpit while you compare match quality, skill gaps, and application signals.</p>
-          <div className="mt-5 grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+          <p className="mt-2 text-sm text-radar-700">Use the left rail to scan quickly, then keep one role open in the detail cockpit while you compare match quality, skill gaps, application signals, and direct-feed trust.</p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
             <div className="rounded-2xl bg-radar-50 px-4 py-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-radar-500">Jobs on screen</p>
               <p className="mt-2 font-display text-3xl font-bold text-radar-900">{jobs.length}</p>
               <p className="mt-1 text-sm text-radar-700">from {data?.total ?? 0} total indexed roles</p>
+            </div>
+            <div className="rounded-2xl bg-radar-50 px-4 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-radar-500">Direct feeds</p>
+              <p className="mt-2 font-display text-3xl font-bold text-radar-900">{directCount}</p>
+              <p className="mt-1 text-sm text-radar-700">official ATS roles on this page</p>
             </div>
             <div className="rounded-2xl bg-radar-50 px-4 py-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-radar-500">Remote on page</p>
@@ -249,6 +266,46 @@ export default function JobsPage() {
               <p className="mt-2 font-display text-3xl font-bold text-radar-900">{averageMatch}%</p>
               <p className="mt-1 text-sm text-radar-700">based on the visible job set</p>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="card rounded-[1.75rem]">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-radar-500">Board lanes</p>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className="rounded-2xl bg-radar-50 px-4 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-radar-500">Direct company feeds</p>
+              <p className="mt-2 text-sm text-radar-700">Greenhouse and Lever public job boards can flow in here without relying on third-party aggregators.</p>
+            </div>
+            <div className="rounded-2xl bg-radar-50 px-4 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-radar-500">Curated market feeds</p>
+              <p className="mt-2 text-sm text-radar-700">RemoteOK, Remotive, and Adzuna still give you market coverage while you build more direct pipelines.</p>
+            </div>
+            <div className="rounded-2xl bg-radar-50 px-4 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-radar-500">Review cockpit</p>
+              <p className="mt-2 text-sm text-radar-700">Open one role, check fit, then shortlist without losing the comparison list.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="card rounded-[1.75rem]">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-radar-500">Direct feed spotlight</p>
+          <h2 className="mt-2 font-display text-2xl font-bold">Trusted company-origin roles</h2>
+          <p className="mt-2 text-sm text-radar-700">These roles come from employer ATS endpoints instead of generic board redistribution.</p>
+          <div className="mt-4 space-y-3">
+            {featuredDirectJobs.slice(0, 4).map((job) => (
+              <button
+                key={job.id}
+                type="button"
+                onClick={() => setSelectedJobId(job.id)}
+                className="w-full rounded-2xl bg-radar-50 px-4 py-3 text-left transition hover:bg-radar-100"
+              >
+                <p className="font-semibold text-radar-900">{job.title}</p>
+                <p className="mt-1 text-sm text-radar-700">{job.company} • {job.location}</p>
+              </button>
+            ))}
+            {!featuredDirectJobs.length ? <p className="text-sm text-radar-700">Add Greenhouse or Lever company identifiers in the environment to populate direct company feeds.</p> : null}
           </div>
         </div>
       </div>
@@ -280,6 +337,7 @@ export default function JobsPage() {
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="font-display text-3xl font-bold text-radar-900">{selectedJob.title}</h2>
+                      {selectedJob.is_direct_source ? <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">Direct company feed</span> : null}
                       {selectedJob.is_remote ? <span className="rounded-full bg-alert-green/15 px-3 py-1 text-xs font-semibold text-alert-green">Remote</span> : null}
                       {selectedJob.visa_sponsorship ? <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">Visa sponsored</span> : null}
                     </div>

@@ -19,6 +19,8 @@ class JobSource(str, Enum):
     REMOTEOK = "remoteok"
     REMOTIVE = "remotive"
     ADZUNA = "adzuna"
+    GREENHOUSE = "greenhouse"
+    LEVER = "lever"
 
 
 class ScraperRunStatus(str, Enum):

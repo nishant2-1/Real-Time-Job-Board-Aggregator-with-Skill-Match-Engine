@@ -5,7 +5,7 @@ from app.core.config import settings
 from app.core.database import SessionLocal
 from app.core.redis_client import get_redis_client
 from app.models.scraper_run import ScraperRun
-from app.services.scraper import AdzunaScraper, RemoteOKScraper, RemotiveScraper
+from app.services.scraper import AdzunaScraper, GreenhouseScraper, LeverScraper, RemoteOKScraper, RemotiveScraper
 from app.tasks.celery_app import celery_app
 import httpx
 
@@ -20,6 +20,8 @@ async def _run_scrapers() -> list:
                 RemoteOKScraper(client=client, db=db, redis_client=redis_client),
                 RemotiveScraper(client=client, db=db, redis_client=redis_client),
                 AdzunaScraper(client=client, db=db, redis_client=redis_client),
+                GreenhouseScraper(client=client, db=db, redis_client=redis_client),
+                LeverScraper(client=client, db=db, redis_client=redis_client),
             ]
             summaries = await asyncio.gather(*(scraper.run() for scraper in scrapers), return_exceptions=False)
 

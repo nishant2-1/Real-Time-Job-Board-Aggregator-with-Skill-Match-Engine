@@ -14,6 +14,8 @@ from app.schemas.jobs import JobDetailResponse, JobListItem, JobListResponse, Jo
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
+DIRECT_SOURCES = {"greenhouse", "lever"}
+
 VISA_POSITIVE_PATTERNS = [
     "visa sponsorship",
     "visa sponsor",
@@ -87,6 +89,10 @@ def _visa_filter_clause():
     )
 
 
+def _is_direct_source(source: str | None) -> bool:
+    return (source or "").lower() in DIRECT_SOURCES
+
+
 @router.get("", response_model=JobListResponse)
 def list_jobs(
     page: int = Query(default=1, ge=1),
@@ -94,6 +100,7 @@ def list_jobs(
     sort: str = Query(default="match_score"),
     search: str | None = Query(default=None, alias="query"),
     remote: bool | None = Query(default=None),
+    direct_only: bool | None = Query(default=None),
     visa_sponsorship: bool | None = Query(default=None),
     min_salary: float | None = Query(default=None, ge=0),
     min_match: int | None = Query(default=None, ge=0, le=100),
@@ -110,6 +117,8 @@ def list_jobs(
 
     if remote:
         query = query.filter(Job.is_remote.is_(True))
+    if direct_only:
+        query = query.filter(Job.source.in_(DIRECT_SOURCES))
     if search:
         like_term = f"%{search.strip()}%"
         query = query.filter(
@@ -160,6 +169,7 @@ def list_jobs(
                 url=job.url,
                 description_clean=job.description_clean,
                 tags=job.tags,
+                is_direct_source=_is_direct_source(job.source),
                 visa_sponsorship=_supports_visa_sponsorship(job),
             )
         )
@@ -205,6 +215,7 @@ def get_job(job_id: str, user: User = Depends(get_current_user), db: Session = D
         description_raw=job.description_raw,
         description_clean=job.description_clean,
         tags=job.tags,
+        is_direct_source=_is_direct_source(job.source),
         visa_sponsorship=_supports_visa_sponsorship(job),
     )
 
