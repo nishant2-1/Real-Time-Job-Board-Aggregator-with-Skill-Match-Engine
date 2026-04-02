@@ -150,6 +150,70 @@ Access points:
 - Backend API: http://localhost:8000
 - API Docs: http://localhost:8000/docs
 
+## What You Need To Run This Project
+
+### Required services
+- Docker Desktop if you want the easiest full-stack startup path
+- Or, if running without Docker:
+  - PostgreSQL
+  - Redis
+  - Python 3.11+
+  - Node.js 18+
+
+### Required configuration
+- `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
+  - Needed so FastAPI, Alembic, and SQLAlchemy can connect to the database.
+- `REDIS_HOST`, `REDIS_PORT`, `REDIS_DB`
+  - Needed for Celery, cache storage, and job deduplication.
+- `JWT_SECRET_KEY`, `JWT_REFRESH_SECRET_KEY`
+  - Needed for access and refresh token signing.
+- `VITE_API_URL`
+  - Needed so the frontend knows where the backend API is running.
+
+### Optional configuration
+- `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`
+  - Optional but recommended.
+  - Without these, scraping still works from RemoteOK and Remotive.
+  - Get them from https://developer.adzuna.com/
+- `ADMIN_EMAILS`
+  - Optional. Used for admin-only scraper actions.
+- `DOCKER_HUB_USERNAME`
+  - Only needed if you use image publishing in CI.
+
+### How to create the missing values
+- JWT secrets:
+```bash
+openssl rand -hex 32
+openssl rand -hex 32
+```
+- Adzuna credentials:
+  - Create an account on Adzuna Developer
+  - Create an application
+  - Copy the generated `app_id` and `app_key` into `.env`
+
+### Where to put them
+1. Copy [jobrador/.env.example](jobrador/.env.example) to `.env`
+2. Fill in the values for your environment
+3. If you run locally without Docker, set:
+   - `POSTGRES_HOST=localhost`
+   - `REDIS_HOST=localhost`
+   - `CELERY_BROKER_URL=redis://localhost:6379/0`
+   - `CELERY_RESULT_BACKEND=redis://localhost:6379/1`
+4. If you run with Docker Compose, keep:
+   - `POSTGRES_HOST=postgres`
+   - `REDIS_HOST=redis`
+   - `CELERY_BROKER_URL=redis://redis:6379/0`
+   - `CELERY_RESULT_BACKEND=redis://redis:6379/1`
+
+### Minimum working setup
+If you only want the app running end-to-end for development, the minimum is:
+- PostgreSQL running
+- Redis running
+- JWT secrets set
+- `VITE_API_URL=http://localhost:8000`
+
+Adzuna keys are not mandatory for the application to start.
+
 ## Local Development (Without Docker)
 
 Prerequisites:
