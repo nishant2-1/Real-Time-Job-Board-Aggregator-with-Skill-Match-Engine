@@ -263,3 +263,57 @@ cd frontend
 npm install
 npm run dev
 ```
+
+## Where Data Is Stored
+
+- Registered users are stored in PostgreSQL in the `users` table.
+- Uploaded resume text and parsed metadata are stored in PostgreSQL in the `resumes` table.
+- Normalized job postings are stored in PostgreSQL in the `jobs` table.
+- Saved job relationships are stored in PostgreSQL in the `saved_jobs` table.
+- Scraper execution history is stored in PostgreSQL in the `scraper_runs` table.
+- Redis stores cache, deduplication keys, and Celery queue state.
+
+Passwords are not stored in plain text. The backend stores only hashed passwords.
+
+## Deploy Without Docker
+
+You do not need Docker on your own machine to deploy JobRadar.
+
+Recommended alternative:
+
+1. Deploy the FastAPI backend to Render or Railway.
+2. Provision managed PostgreSQL and Redis on that platform.
+3. Run Celery worker and Celery beat as separate background services.
+4. Deploy the frontend as a static site with `VITE_API_URL` pointing at the backend.
+
+Backend build command:
+
+```bash
+cd backend && pip install -r requirements.txt && python -m spacy download en_core_web_sm
+```
+
+Backend start command:
+
+```bash
+cd backend && alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+Celery worker command:
+
+```bash
+cd backend && celery -A app.tasks.celery_app.celery_app worker --loglevel=info
+```
+
+Celery beat command:
+
+```bash
+cd backend && celery -A app.tasks.celery_app.celery_app beat --loglevel=info
+```
+
+Frontend build command:
+
+```bash
+cd frontend && npm ci && npm run build
+```
+
+For a fuller handoff explanation, see `scripts/PROJECT_HANDOFF.md`.

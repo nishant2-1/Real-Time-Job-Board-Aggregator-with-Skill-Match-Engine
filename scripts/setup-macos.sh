@@ -99,6 +99,9 @@ If you want to run without Docker:
 5. Run frontend:
    cd "$FRONTEND_DIR"
    npm run dev
+
+Project explanation and handoff notes:
+	cat "$ROOT_DIR/scripts/PROJECT_HANDOFF.md"
 EOF
 }
 
