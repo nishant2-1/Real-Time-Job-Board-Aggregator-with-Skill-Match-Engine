@@ -2,6 +2,7 @@ import axios, { AxiosError, type AxiosProgressEvent, type InternalAxiosRequestCo
 
 import type {
   AuthTokens,
+  AdminOverview,
   Job,
   JobFilters,
   LoginPayload,
@@ -219,6 +220,11 @@ export async function getScraperStatus(): Promise<ScraperStatus> {
 
 export async function triggerScraper(): Promise<ScraperTriggerResponse> {
   const response = await api.post<ScraperTriggerResponse>("/scraper/trigger");
+  return response.data;
+}
+
+export async function getAdminOverview(): Promise<AdminOverview> {
+  const response = await api.get<AdminOverview>("/admin/overview");
   return response.data;
 }
 

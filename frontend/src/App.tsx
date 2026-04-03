@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import Layout from "./components/Layout";
+import AdminPage from "./pages/AdminPage";
 import DashboardPage from "./pages/DashboardPage";
 import JobsPage from "./pages/JobsPage";
 import LoginPage from "./pages/LoginPage";
@@ -14,6 +15,16 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <AdminPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/dashboard"
         element={

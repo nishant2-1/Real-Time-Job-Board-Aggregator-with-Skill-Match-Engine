@@ -8,6 +8,7 @@ const navigation = [
   { to: "/jobs", label: "Jobs", short: "Jobs" },
   { to: "/resume", label: "Resume", short: "Resume" },
   { to: "/saved", label: "Saved Jobs", short: "Saved" },
+  { to: "/admin", label: "Admin", short: "Admin" },
 ];
 
 const watchList = ["Direct company feeds", "Remote engineering", "Visa-ready roles"];
@@ -119,7 +120,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       </div>
 
       <nav className="fixed inset-x-3 bottom-3 z-40 rounded-3xl border border-radar-300/60 bg-white/95 p-2 shadow-2xl backdrop-blur md:hidden">
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-5 gap-2">
           {navigation.map((item) => (
             <NavLink
               key={item.to}

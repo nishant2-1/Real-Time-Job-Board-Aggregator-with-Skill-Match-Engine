@@ -4,6 +4,73 @@ export interface User {
   fullName: string;
 }
 
+export interface AdminCounts {
+  users: number;
+  resumes: number;
+  jobs: number;
+  saved_jobs: number;
+  scraper_runs: number;
+  direct_jobs: number;
+}
+
+export interface AdminStorage {
+  app_env: string;
+  app_version: string;
+  postgres_host: string;
+  postgres_port: number;
+  postgres_db: string;
+  redis_host: string;
+  redis_port: number;
+  redis_db: number;
+  scrape_interval_minutes: number;
+  match_cache_ttl_seconds: number;
+  rate_limit_default: string;
+  cors_origin_count: number;
+  admin_email_count: number;
+  adzuna_configured: boolean;
+  greenhouse_board_count: number;
+  lever_company_count: number;
+}
+
+export interface AdminUserSummary {
+  id: string;
+  email: string;
+  full_name: string;
+  created_at: string;
+  last_login_at?: string | null;
+}
+
+export interface AdminJobSummary {
+  id: string;
+  title: string;
+  company: string;
+  source: string;
+  location: string;
+  posted_at: string;
+  is_remote: boolean;
+}
+
+export interface AdminScraperRunSummary {
+  id: string;
+  source: string;
+  status: string;
+  jobs_fetched: number;
+  jobs_inserted: number;
+  jobs_updated: number;
+  started_at: string;
+  finished_at: string;
+  error_message?: string | null;
+}
+
+export interface AdminOverview {
+  generated_at: string;
+  counts: AdminCounts;
+  storage: AdminStorage;
+  recent_users: AdminUserSummary[];
+  recent_jobs: AdminJobSummary[];
+  recent_scraper_runs: AdminScraperRunSummary[];
+}
+
 export interface AuthTokens {
   access_token: string;
   refresh_token: string;

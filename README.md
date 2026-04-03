@@ -317,3 +317,5 @@ cd frontend && npm ci && npm run build
 ```
 
 For a fuller handoff explanation, see `scripts/PROJECT_HANDOFF.md`.
+
+For a concrete managed-platform setup, see `RENDER_DEPLOYMENT.md`.
