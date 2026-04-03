@@ -9,6 +9,8 @@
 ![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?logo=docker&logoColor=white)
 ![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/nishant2-1/Real-Time-Job-Board-Aggregator-with-Skill-Match-Engine)
+
 ## Overview
 
 JobRadar is a full-stack job discovery platform that automates job search and ranking.
@@ -319,3 +321,5 @@ cd frontend && npm ci && npm run build
 For a fuller handoff explanation, see `scripts/PROJECT_HANDOFF.md`.
 
 For a concrete managed-platform setup, see `RENDER_DEPLOYMENT.md`.
+
+For one-click Render setup from GitHub, use the Deploy to Render button at the top of this README. The repo now includes `render.yaml` at the root for that flow.

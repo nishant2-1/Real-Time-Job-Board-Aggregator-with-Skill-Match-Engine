@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     app_port: int = Field(default=8000, description="App bind port")
     app_version: str = Field(default="1.0.0", description="Service version")
 
+    database_url: str = Field(default="", description="Full SQLAlchemy database URL override")
+    redis_url_override: str = Field(default="", alias="REDIS_URL", description="Full Redis URL override")
+
     postgres_host: str = Field(default="postgres", description="PostgreSQL host")
     postgres_port: int = Field(default=5432, description="PostgreSQL port")
     postgres_db: str = Field(default="jobrador", description="PostgreSQL database")
@@ -109,6 +112,8 @@ class Settings(BaseSettings):
 
     @property
     def sqlalchemy_database_uri(self) -> str:
+        if self.database_url:
+            return self.database_url
         return (
             f"postgresql+psycopg2://{self.postgres_user}:{self.postgres_password}"
             f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
@@ -116,6 +121,8 @@ class Settings(BaseSettings):
 
     @property
     def redis_url(self) -> str:
+        if self.redis_url_override:
+            return self.redis_url_override
         return f"redis://{self.redis_host}:{self.redis_port}/{self.redis_db}"
 
 
