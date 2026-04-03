@@ -7,8 +7,8 @@ from app.core.database import SessionLocal
 from app.models.job import Job
 from app.models.job_match import JobMatch
 from app.models.resume import Resume
-from app.tasks.celery_app import celery_app
 from app.services.matcher import SkillMatcher
+from app.tasks.celery_app import celery_app
 
 
 @celery_app.task(name="app.tasks.match_tasks.recompute_matches_for_user")

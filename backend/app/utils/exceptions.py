@@ -5,7 +5,6 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-
 ERROR_SCHEMA_EXAMPLE = {
     "error": {
         "code": "not_found",

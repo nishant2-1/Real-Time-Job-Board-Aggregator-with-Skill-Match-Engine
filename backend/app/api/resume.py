@@ -1,5 +1,5 @@
-from datetime import UTC, datetime
 import zipfile
+from datetime import UTC, datetime
 from io import BytesIO
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
@@ -11,11 +11,15 @@ from app.core.database import get_db
 from app.models.job_match import JobMatch
 from app.models.resume import Resume
 from app.models.user import User
-from app.schemas.resume import ResumeDeleteResponse, ResumeMeResponse, ResumeUpdateRequest, ResumeUploadResponse
+from app.schemas.resume import (
+    ResumeDeleteResponse,
+    ResumeMeResponse,
+    ResumeUpdateRequest,
+    ResumeUploadResponse,
+)
 from app.services.matcher import SkillMatcher
 from app.services.resume_parser import ResumeParser
 from app.tasks.match_tasks import recompute_matches_for_user
-
 
 router = APIRouter(prefix="/resume", tags=["resume"])
 

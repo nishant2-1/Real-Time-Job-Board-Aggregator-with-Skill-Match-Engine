@@ -15,7 +15,6 @@ from app.core.security import (
 from app.models.user import User
 from app.schemas.auth import LoginRequest, RefreshTokenRequest, RegisterRequest, TokenPairResponse
 
-
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 

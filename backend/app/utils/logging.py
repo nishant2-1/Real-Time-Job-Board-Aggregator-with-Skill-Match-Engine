@@ -4,7 +4,6 @@ from contextvars import ContextVar
 
 from pythonjsonlogger import jsonlogger
 
-
 request_id_ctx_var: ContextVar[str] = ContextVar("request_id", default="")
 
 

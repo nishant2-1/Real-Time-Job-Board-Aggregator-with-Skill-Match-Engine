@@ -10,7 +10,6 @@ from docx import Document
 from app.models.enums import ResumeEducationLevel, ResumeFileType
 from app.services.skills_catalog import TECH_SKILLS
 
-
 BASE_SKILLS = set(TECH_SKILLS)
 EXTRA_SKILLS = {
     "spring boot",

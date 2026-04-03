@@ -1,6 +1,7 @@
 import logging
 import time
 import uuid
+from typing import cast
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -9,6 +10,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.types import ExceptionHandler
 
 from app.api.router import api_router
 from app.core.config import settings
@@ -19,7 +21,6 @@ from app.utils.exceptions import (
 )
 from app.utils.logging import configure_logging, request_id_ctx_var
 
-
 configure_logging()
 logger = logging.getLogger(__name__)
 
@@ -27,10 +28,10 @@ app = FastAPI(title=settings.app_name, version=settings.app_version)
 limiter = Limiter(key_func=get_remote_address, default_limits=[settings.rate_limit_default])
 app.state.limiter = limiter
 
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-app.add_exception_handler(StarletteHTTPException, http_exception_handler)
-app.add_exception_handler(RequestValidationError, validation_exception_handler)
-app.add_exception_handler(Exception, unhandled_exception_handler)
+app.add_exception_handler(RateLimitExceeded, cast(ExceptionHandler, _rate_limit_exceeded_handler))
+app.add_exception_handler(StarletteHTTPException, cast(ExceptionHandler, http_exception_handler))
+app.add_exception_handler(RequestValidationError, cast(ExceptionHandler, validation_exception_handler))
+app.add_exception_handler(Exception, cast(ExceptionHandler, unhandled_exception_handler))
 
 app.add_middleware(
     CORSMiddleware,

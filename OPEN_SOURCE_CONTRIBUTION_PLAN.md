@@ -27,19 +27,19 @@ This plan is for real, reviewable contributions only.
 
 Copy this section into each project and update weekly.
 
-### Project: <name>
+### Project: [project-name]
 
-- Repo URL: <url>
+- Repo URL: [repository-url]
 - Labels to target: good first issue, bug, help wanted, documentation
-- This week focus: <what you will ship>
+- This week focus: [what-you-will-ship]
 - PRs opened:
-  - <PR link>
+  - [pr-link]
 - PRs merged:
-  - <PR link>
+  - [pr-link]
 - Issues created/commented:
-  - <Issue link>
+  - [issue-link]
 - Notes:
-  - <impact summary>
+  - [impact-summary]
 
 ## Contribution Types To Rotate
 

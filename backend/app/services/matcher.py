@@ -1,7 +1,7 @@
 import json
 import re
 from dataclasses import dataclass
-from typing import Sequence
+from typing import Any, Sequence, cast
 
 import numpy as np
 from redis import Redis
@@ -9,7 +9,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from app.core.redis_client import get_redis_client
-
 
 FILTERED_KEYWORDS = {
     "experience",
@@ -49,9 +48,9 @@ class SkillMatcher:
             return []
 
         tfidf = TfidfVectorizer(stop_words="english", ngram_range=(1, 2), max_features=1000)
-        matrix = tfidf.fit_transform([cleaned])
-        scores = matrix.toarray().ravel()
-        terms = tfidf.get_feature_names_out()
+        matrix = cast(Any, tfidf.fit_transform([cleaned]))
+        scores = np.asarray(matrix.toarray()).ravel()
+        terms = cast(list[str], tfidf.get_feature_names_out().tolist())
         ranked_indices = np.argsort(scores)[::-1]
 
         keywords: list[str] = []
@@ -70,13 +69,13 @@ class SkillMatcher:
         key = self._cache_key(user_id=user_id, job_id=job_id)
 
         cached = self.redis.get(key)
-        if cached:
-            payload = json.loads(cached)
+        if isinstance(cached, str):
+            payload = json.loads(cast(str, cached))
             return MatchResult(**payload)
 
         resume_text = resume.extracted_text or ""
         job_text = job.description_clean or ""
-        tfidf_matrix = self.vectorizer.fit_transform([resume_text, job_text])
+        tfidf_matrix = cast(Any, self.vectorizer.fit_transform([resume_text, job_text]))
         base_score = float(cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]) * 100
 
         resume_skills = self._normalize_resume_skills(resume)
@@ -107,13 +106,13 @@ class SkillMatcher:
 
         resume_text = resume.extracted_text or ""
         job_texts = [job.description_clean or "" for job in jobs]
-        tfidf_matrix = self.vectorizer.fit_transform([resume_text, *job_texts])
+        tfidf_matrix = cast(Any, self.vectorizer.fit_transform([resume_text, *job_texts]))
         base_scores = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:]).flatten() * 100
 
         resume_skills = self._normalize_resume_skills(resume)
         if resume_skills:
             skill_vectorizer = TfidfVectorizer(vocabulary=resume_skills, binary=True, use_idf=False, norm=None)
-            job_skill_matrix = skill_vectorizer.fit_transform(job_texts)
+            job_skill_matrix = cast(Any, skill_vectorizer.fit_transform(job_texts))
             matched_skill_counts = np.asarray((job_skill_matrix > 0).sum(axis=1)).ravel()
             keyword_scores = (matched_skill_counts / max(1, len(resume_skills))) * 100
         else:
@@ -150,4 +149,4 @@ class SkillMatcher:
         keys = list(self.redis.scan_iter(match=pattern))
         if not keys:
             return 0
-        return int(self.redis.delete(*keys))
+        return cast(int, self.redis.delete(*keys))

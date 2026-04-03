@@ -1,7 +1,6 @@
-from sqlalchemy import func, or_
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
 
 from app.api.deps import get_current_user
 from app.core.database import get_db
@@ -10,7 +9,6 @@ from app.models.job_match import JobMatch
 from app.models.saved_job import SavedJob
 from app.models.user import User
 from app.schemas.jobs import JobDetailResponse, JobListItem, JobListResponse, JobSaveToggleResponse
-
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 

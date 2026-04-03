@@ -15,7 +15,6 @@ from app.models.job import Job
 from app.models.scraper_run import ScraperRun
 from app.utils.hash import make_dedup_hash
 
-
 logger = logging.getLogger(__name__)
 
 USER_AGENTS = [

@@ -1,7 +1,7 @@
-from sqlalchemy import func
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin, get_current_user
@@ -9,9 +9,8 @@ from app.core.config import settings
 from app.core.database import get_db
 from app.models.job import Job
 from app.models.scraper_run import ScraperRun
-from app.tasks.scraper_tasks import scrape_all_sources
 from app.models.user import User
-
+from app.tasks.scraper_tasks import scrape_all_sources
 
 router = APIRouter(prefix="/scraper", tags=["scraper"])
 
@@ -45,7 +44,8 @@ def scraper_status(user: User = Depends(get_current_user), db: Session = Depends
         .group_by(ScraperRun.source)
         .all()
     )
-    per_source_jobs = dict(db.query(Job.source, func.count(Job.id)).group_by(Job.source).all())
+    per_source_job_rows = db.query(Job.source, func.count(Job.id)).group_by(Job.source).all()
+    per_source_jobs: dict[str, int] = {str(source): int(total) for source, total in per_source_job_rows}
     last_scrape_time = db.query(func.max(ScraperRun.finished_at)).scalar()
     if last_scrape_time is None:
         next_run = datetime.now(tz=UTC) + timedelta(minutes=settings.scrape_interval_minutes)

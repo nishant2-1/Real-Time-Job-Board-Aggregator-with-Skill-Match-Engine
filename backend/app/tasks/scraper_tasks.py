@@ -1,13 +1,20 @@
 import asyncio
 from datetime import UTC, datetime, timedelta
 
+import httpx
+
 from app.core.config import settings
 from app.core.database import SessionLocal
 from app.core.redis_client import get_redis_client
 from app.models.scraper_run import ScraperRun
-from app.services.scraper import AdzunaScraper, GreenhouseScraper, LeverScraper, RemoteOKScraper, RemotiveScraper
+from app.services.scraper import (
+    AdzunaScraper,
+    GreenhouseScraper,
+    LeverScraper,
+    RemoteOKScraper,
+    RemotiveScraper,
+)
 from app.tasks.celery_app import celery_app
-import httpx
 
 
 async def _run_scrapers() -> list:

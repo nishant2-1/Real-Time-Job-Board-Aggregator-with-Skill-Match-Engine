@@ -18,7 +18,6 @@ from app.models.job import Job
 from app.utils.hash import make_dedup_hash
 from app.utils.user_agents import rotate_user_agent
 
-
 logger = logging.getLogger(__name__)
 WHITESPACE_RE = re.compile(r"\s+")
 

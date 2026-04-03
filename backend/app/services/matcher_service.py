@@ -1,5 +1,6 @@
 import json
 from dataclasses import dataclass
+from typing import Any, cast
 
 from redis import Redis
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -35,12 +36,12 @@ class MatcherService:
     def compute(self, resume: Resume, job: Job) -> MatchResult:
         key = self._cache_key(str(resume.id), str(job.id))
         cached = self.redis.get(key)
-        if cached:
-            payload = json.loads(cached)
+        if isinstance(cached, str):
+            payload = json.loads(cast(str, cached))
             return MatchResult(**payload)
 
         corpus = [resume.extracted_text or "", job.description_clean or ""]
-        tfidf_matrix = self.vectorizer.fit_transform(corpus)
+        tfidf_matrix = cast(Any, self.vectorizer.fit_transform(corpus))
         similarity = float(cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0])
 
         matched_skills, missing_skills = self._extract_overlap(resume.parsed_skills, job.description_clean)
