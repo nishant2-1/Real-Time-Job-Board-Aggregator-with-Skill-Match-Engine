@@ -11,6 +11,8 @@
 </div>
 
 <div align="center">
+[![GitHub stars](https://img.shields.io/github/stars/nishant2-1/Real-Time-Job-Board-Aggregator-with-Skill-Match-Engine.svg?style=social&label=Star&maxAge=2592000)](https://github.com/nishant2-1/Real-Time-Job-Board-Aggregator-with-Skill-Match-Engine/)
+# JobRadar - Real-Time Job Aggregator with Resume Skill Match Intelligence
 
 ![Python 3.11](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.10x-009688?logo=fastapi&logoColor=white)
