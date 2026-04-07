@@ -1,7 +1,19 @@
-# JobRadar - Real-Time Job Aggregator with Resume Skill Match Intelligence
+# JobRadar — Real-Time Job Aggregator with Resume Skill Match Intelligence
+
+<div align="center">
+
+[![GitHub Stars](https://img.shields.io/github/stars/nishant2-1/Real-Time-Job-Board-Aggregator-with-Skill-Match-Engine?style=for-the-badge&color=yellow)](https://github.com/nishant2-1/Real-Time-Job-Board-Aggregator-with-Skill-Match-Engine/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/nishant2-1/Real-Time-Job-Board-Aggregator-with-Skill-Match-Engine?style=for-the-badge&color=blue)](https://github.com/nishant2-1/Real-Time-Job-Board-Aggregator-with-Skill-Match-Engine/network/members)
+[![GitHub Issues](https://img.shields.io/github/issues/nishant2-1/Real-Time-Job-Board-Aggregator-with-Skill-Match-Engine?style=for-the-badge&color=red)](https://github.com/nishant2-1/Real-Time-Job-Board-Aggregator-with-Skill-Match-Engine/issues)
+[![GitHub Last Commit](https://img.shields.io/github/last-commit/nishant2-1/Real-Time-Job-Board-Aggregator-with-Skill-Match-Engine?style=for-the-badge)](https://github.com/nishant2-1/Real-Time-Job-Board-Aggregator-with-Skill-Match-Engine/commits/main)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+
+</div>
+
+<div align="center">
 
 ![Python 3.11](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.11x-009688?logo=fastapi&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.10x-009688?logo=fastapi&logoColor=white)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white)
@@ -9,7 +21,36 @@
 ![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?logo=docker&logoColor=white)
 ![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)
 
+</div>
+
+<div align="center">
+
+**Your personal job search engine — continuously finds, deduplicates, and ranks opportunities by your skill profile.**
+
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/nishant2-1/Real-Time-Job-Board-Aggregator-with-Skill-Match-Engine)
+
+</div>
+
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [✨ Features](#-features)
+- [System Architecture](#system-architecture)
+- [Core System Components](#core-system-components)
+- [System Design Notes](#system-design-notes)
+- [Tech Stack](#tech-stack)
+- [Quick Start (Docker)](#quick-start-docker)
+- [What You Need To Run This Project](#what-you-need-to-run-this-project)
+- [Local Development (Without Docker)](#local-development-without-docker)
+- [Where Data Is Stored](#where-data-is-stored)
+- [Deploy Without Docker](#deploy-without-docker)
+- [🤝 Contributing](#-contributing)
+- [⭐ Show Your Support](#-show-your-support)
+- [📝 License](#-license)
+
+---
 
 ## Overview
 
@@ -23,63 +64,24 @@ Instead of manually checking multiple sites every day, JobRadar:
 - Computes a skill-match score for each job using NLP.
 - Presents ranked opportunities in a responsive React dashboard.
 
-In one line, JobRadar acts like a personal job search engine that continuously finds, deduplicates, and ranks opportunities by your profile fit.
+---
 
-## Core System Components
+## ✨ Features
 
-### 1) Scraper Engine (Background Ingestion)
+| Feature | Description |
+|---|---|
+| 🔍 **Multi-Source Aggregation** | Pulls jobs from RemoteOK, Remotive, Adzuna, Greenhouse, and Lever ATS in real time |
+| 🧠 **AI Skill Matching** | TF-IDF + cosine similarity ranks jobs 0–100 against your resume with keyword boosts |
+| 📄 **Resume Parsing** | Upload PDF or DOCX; spaCy + regex extracts skills, roles, education, and experience |
+| 🔄 **Deduplication** | Redis fingerprinting prevents the same job appearing twice across sources |
+| ⏰ **Auto-Refresh** | Celery Beat scrapes sources every 30 minutes without any manual action |
+| 🔒 **Secure Auth** | JWT access + refresh token model with hashed passwords |
+| 💾 **Save Jobs** | Bookmark roles and return to them from your personal saved-jobs list |
+| 📊 **Analytics Dashboard** | Activity summary and match score insights at a glance |
+| 🐳 **One-Command Docker Setup** | Full stack (API, workers, DB, cache, frontend) runs with a single command |
+| 📡 **OpenAPI Docs** | Interactive Swagger UI auto-generated at `/docs` |
 
-- Scheduled with Celery Beat every 30 minutes.
-- Fetches jobs from external providers using HTTP clients.
-- Normalizes heterogeneous payloads into a common schema.
-- Stores job fingerprints in Redis to avoid duplicates.
-- Persists clean job records in PostgreSQL.
-
-Interview summary:
-Built an async scraping pipeline with Celery scheduling and Redis hash-based deduplication across multiple external job sources.
-
-### 2) Resume Parser (Unstructured to Structured Data)
-
-- Accepts PDF and DOCX uploads.
-- Extracts text with PyMuPDF and python-docx.
-- Uses spaCy plus regex heuristics to identify skills, role titles, education indicators, and experience cues.
-
-Interview summary:
-Converted unstructured resume documents into structured candidate features using NLP and rule-based extraction.
-
-### 3) Skill-Match Engine (Ranking Intelligence)
-
-- Vectorizes resume text and job descriptions with TF-IDF.
-- Computes cosine similarity between vectors.
-- Applies keyword overlap boosts for explicit skill matches.
-- Returns normalized scores in the 0-100 range.
-- Caches score lookups in Redis for faster repeat responses.
-
-Interview summary:
-Implemented a TF-IDF plus cosine similarity matcher with deterministic skill boosting and Redis-backed result caching.
-
-### 4) FastAPI Backend (Platform Control Plane)
-
-- JWT-based registration and login.
-- Resume upload and profile endpoints.
-- Job listing endpoints with filter and sort controls.
-- Scraper trigger and status endpoints.
-- Rate limiting, request ID tracing, and structured logging.
-- OpenAPI docs automatically available at `/docs`.
-
-Interview summary:
-Developed a production-style FastAPI service with authentication, observability, and guarded API traffic.
-
-### 5) React Frontend (User Experience Layer)
-
-- React 18, TypeScript, Tailwind CSS.
-- Dashboard for activity and match analytics.
-- Jobs view with filters, direct-feed lanes, and save actions.
-- Resume upload and editable parsed metadata.
-- React Query data caching and loading or error states.
-
-Interview summary:
-Built a type-safe React application with query caching, reusable hooks, and responsive workflows for job discovery.
+---
 
 ## System Architecture
 
@@ -106,6 +108,47 @@ flowchart LR
   RS --> API
   MM --> API
 ```
+
+## Core System Components
+
+### 1) Scraper Engine (Background Ingestion)
+
+- Scheduled with Celery Beat every 30 minutes.
+- Fetches jobs from external providers using HTTP clients.
+- Normalizes heterogeneous payloads into a common schema.
+- Stores job fingerprints in Redis to avoid duplicates.
+- Persists clean job records in PostgreSQL.
+
+### 2) Resume Parser (Unstructured to Structured Data)
+
+- Accepts PDF and DOCX uploads.
+- Extracts text with PyMuPDF and python-docx.
+- Uses spaCy plus regex heuristics to identify skills, role titles, education indicators, and experience cues.
+
+### 3) Skill-Match Engine (Ranking Intelligence)
+
+- Vectorizes resume text and job descriptions with TF-IDF.
+- Computes cosine similarity between vectors.
+- Applies keyword overlap boosts for explicit skill matches.
+- Returns normalized scores in the 0–100 range.
+- Caches score lookups in Redis for faster repeat responses.
+
+### 4) FastAPI Backend (Platform Control Plane)
+
+- JWT-based registration and login.
+- Resume upload and profile endpoints.
+- Job listing endpoints with filter and sort controls.
+- Scraper trigger and status endpoints.
+- Rate limiting, request ID tracing, and structured logging.
+- OpenAPI docs automatically available at `/docs`.
+
+### 5) React Frontend (User Experience Layer)
+
+- React 18, TypeScript, Tailwind CSS.
+- Dashboard for activity and match analytics.
+- Jobs view with filters, direct-feed lanes, and save actions.
+- Resume upload and editable parsed metadata.
+- React Query data caching and loading or error states.
 
 ## System Design Notes
 
@@ -148,18 +191,22 @@ flowchart LR
 
 ## Quick Start (Docker)
 
+> **Prerequisites:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) must be running.
+
 ```bash
 git clone https://github.com/nishant2-1/Real-Time-Job-Board-Aggregator-with-Skill-Match-Engine.git
-cd Real-Time-Job-Board-Aggregator-with-Skill-Match-Engine/jobrador
+cd Real-Time-Job-Board-Aggregator-with-Skill-Match-Engine
 cp .env.example .env
 docker compose up --build
 ```
 
 Access points:
 
-- Frontend: <http://localhost:3000>
-- Backend API: <http://localhost:8000>
-- API docs: <http://localhost:8000/docs>
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:3000 |
+| Backend API | http://localhost:8000 |
+| API Docs (Swagger) | http://localhost:8000/docs |
 
 ## What You Need To Run This Project
 
@@ -254,11 +301,20 @@ cd backend
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+python -m spacy download en_core_web_sm
 python -m alembic upgrade head
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-Frontend:
+Celery worker (separate terminal):
+
+```bash
+cd backend
+source .venv/bin/activate
+celery -A app.tasks.celery_app.celery_app worker --loglevel=info
+```
+
+Frontend (separate terminal):
 
 ```bash
 cd frontend
@@ -322,4 +378,34 @@ For a fuller handoff explanation, see `scripts/PROJECT_HANDOFF.md`.
 
 For a concrete managed-platform setup, see `RENDER_DEPLOYMENT.md`.
 
-For one-click Render setup from GitHub, use the Deploy to Render button at the top of this README. The repo now includes `render.yaml` at the root for that flow.
+For one-click Render setup from GitHub, use the Deploy to Render button at the top of this README. The repo includes `render.yaml` at the root for that flow.
+
+---
+
+## 🤝 Contributing
+
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. **Any contributions you make are greatly appreciated!**
+
+1. **Fork** the repository.
+2. **Create** your feature branch: `git checkout -b feature/amazing-feature`
+3. **Commit** your changes: `git commit -m 'Add some amazing feature'`
+4. **Push** to the branch: `git push origin feature/amazing-feature`
+5. **Open a Pull Request**.
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+
+Looking for a place to start? Check out issues labeled [`good first issue`](https://github.com/nishant2-1/Real-Time-Job-Board-Aggregator-with-Skill-Match-Engine/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) or [`help wanted`](https://github.com/nishant2-1/Real-Time-Job-Board-Aggregator-with-Skill-Match-Engine/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22).
+
+---
+
+## ⭐ Show Your Support
+
+If JobRadar helped you or you find it interesting, please consider giving it a ⭐ star — it helps others discover the project and motivates continued development!
+
+[![GitHub Stars](https://img.shields.io/github/stars/nishant2-1/Real-Time-Job-Board-Aggregator-with-Skill-Match-Engine?style=social)](https://github.com/nishant2-1/Real-Time-Job-Board-Aggregator-with-Skill-Match-Engine/stargazers)
+
+---
+
+## 📝 License
+
+This project is licensed under the [MIT License](LICENSE). Feel free to use, modify, and distribute it.
