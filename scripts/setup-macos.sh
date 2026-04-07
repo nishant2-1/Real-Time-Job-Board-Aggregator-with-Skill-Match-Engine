@@ -101,8 +101,8 @@ If you want to run without Docker:
    npm run dev
 
 Project explanation and handoff notes:
-	cat "$ROOT_DIR/scripts/PROJECT_HANDOFF.md"
 EOF
+	cat "$ROOT_DIR/scripts/PROJECT_HANDOFF.md"
 }
 
 main() {

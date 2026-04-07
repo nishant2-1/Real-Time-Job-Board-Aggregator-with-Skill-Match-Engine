@@ -55,6 +55,20 @@ Use the format `type: short description`:
 - **Python** — follow PEP 8; the project uses `pyproject.toml` for tooling config.
 - **TypeScript/React** — follow the existing ESLint config in `frontend/eslint.config.js`.
 
+To check your changes before submitting:
+
+```bash
+# Python linting and type checking (from repo root)
+cd backend
+source .venv/bin/activate
+ruff check .
+mypy .
+
+# Frontend linting
+cd frontend
+npm run lint
+```
+
 ## Reporting a Security Vulnerability
 
 Please do **not** open a public issue for security vulnerabilities. Contact the maintainer directly through GitHub's private vulnerability reporting feature instead.
